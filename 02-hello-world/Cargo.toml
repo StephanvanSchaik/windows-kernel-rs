@@ -14,8 +14,7 @@ panic = "abort"
 panic = "abort"
 
 [build-dependencies]
-thiserror = "1.0"
-winreg = "0.10"
+windows-kernel-build = { path = "../windows-kernel-build" }
 
 [dependencies.winapi]
 git = "https://github.com/Trantect/winapi-rs.git"

@@ -1,20 +1,5 @@
 use std::path::PathBuf;
-use thiserror::Error;
-use winreg::RegKey;
-use winreg::enums::HKEY_LOCAL_MACHINE;
-
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error(transparent)]
-    IoError(#[from] std::io::Error),
-    #[error("cannot find the directory")]
-    DirectoryNotFound,
-}
-
-pub enum DirectoryType {
-    Include,
-    Library,
-}
+use windows_kernel_build::DirectoryType;
 
 /// Retrieves the path to the Windows Kits directory. The default should be
 /// `C:\Program Files (x86)\Windows Kits\10`.

@@ -17,5 +17,4 @@ cty = "0.2"
 [build-dependencies]
 bindgen = "0.59"
 cc = "1.0"
-thiserror = "1.0"
-winreg = "0.10"
+windows-kernel-build = { path = "../windows-kernel-build" }
