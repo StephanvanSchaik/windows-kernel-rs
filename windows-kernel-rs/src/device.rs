@@ -37,10 +37,26 @@ impl Drop for Device {
 }
 
 pub trait DeviceOperations: Sync + Sized {
-    fn create(&mut self, device: Device) -> Result<(), Error>;
-    fn close(&mut self, device: Device) -> Result<(), Error>;
-    fn cleanup(&mut self, device: Device) -> Result<(), Error>;
-    fn ioctl(&mut self, device: Device, ioctl_num: u32, user_ptr: &mut UserPtr) -> Result<(), Error>;
+    fn create(&mut self, _device: Device) -> Result<(), Error> {
+        Ok(())
+    }
+
+    fn close(&mut self, _device: Device) -> Result<(), Error> {
+        Ok(())
+    }
+
+    fn cleanup(&mut self, _device: Device) -> Result<(), Error> {
+        Ok(())
+    }
+
+    fn ioctl(
+        &mut self,
+        _device: Device,
+        _ioctl_num: u32,
+        _user_ptr: &mut UserPtr,
+    ) -> Result<(), Error> {
+        Ok(())
+    }
 }
 
 unsafe extern "C" fn create_callback<T: DeviceOperations>(
