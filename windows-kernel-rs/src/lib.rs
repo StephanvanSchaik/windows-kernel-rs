@@ -10,11 +10,13 @@ pub mod driver;
 pub mod error;
 pub mod io;
 pub mod string;
+pub mod symbolic_link;
 pub mod user_ptr;
 
 pub use crate::device::{Device, DeviceOperations, dispatch_device};
 pub use crate::driver::Driver;
 pub use crate::error::Error;
+pub use crate::symbolic_link::SymbolicLink;
 pub use crate::user_ptr::UserPtr;
 
 pub use widestring::U16CString;
