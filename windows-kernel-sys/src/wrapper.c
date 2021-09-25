@@ -18,3 +18,10 @@ void _IoSetCompletionRoutine(
 ) {
 	IoSetCompletionRoutine(irp, completion_routine, context, invoke_on_success, invoke_on_error, invoke_on_cancel);
 }
+
+void _IoCompleteRequest(
+	PIRP irp,
+	CCHAR priority_boost
+) {
+	IoCompleteRequest(irp, priority_boost);
+}

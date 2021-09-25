@@ -16,10 +16,12 @@ extern "C" {
         invoke_on_error: BOOLEAN,
         invoke_on_cancel: BOOLEAN,
     );
+    pub fn _IoCompleteRequest(irp: PIRP, priority_boost: CCHAR);
 }
 
 pub use self::_IoGetCurrentIrpStackLocation as IoGetCurrentIrpStackLocation;
 pub use self::_IoGetNextIrpStackLocation as IoGetNextIrpStackLocation;
 pub use self::_IoSetCompletionRoutine as IoSetCompletionRoutine;
+pub use self::_IoCompleteRequest as IoCompleteRequest;
 
 include!(concat!(env!("OUT_DIR"), "/ntoskrnl.rs"));
