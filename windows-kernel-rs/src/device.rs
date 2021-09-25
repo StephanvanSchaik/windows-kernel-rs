@@ -1,5 +1,6 @@
 use alloc::boxed::Box;
 use crate::error::Error;
+use crate::user_ptr::UserPtr;
 use windows_kernel_sys::base::{DEVICE_OBJECT, IO_NO_INCREMENT, IRP, NTSTATUS};
 use windows_kernel_sys::base::{STATUS_INVALID_PARAMETER, STATUS_SUCCESS};
 use windows_kernel_sys::base::{IRP_MJ_CREATE, IRP_MJ_CLOSE, IRP_MJ_CLEANUP, IRP_MJ_DEVICE_CONTROL};
@@ -125,7 +126,7 @@ unsafe extern fn release_callback<T: DeviceOperations>(
     device: *mut DEVICE_OBJECT,
 ) {
     let extension = (*device).DeviceExtension as *mut DeviceExtension;
-    
+
     let ptr = core::mem::replace(&mut (*extension).data, core::ptr::null_mut());
     Box::from_raw(ptr as *mut T);
 }
@@ -146,66 +147,6 @@ impl<T: DeviceOperations> DeviceOperationsVtable<T> {
 pub struct DeviceExtension {
     pub(crate) vtable: *const device_operations,
     pub(crate) data: *mut cty::c_void,
-}
-
-pub struct UserPtr {
-    ptr: *mut cty::c_void,
-    read_size: usize,
-    write_size: usize,
-    return_size: usize,
-}
-
-impl UserPtr {
-    pub unsafe fn new(
-        ptr: *mut cty::c_void,
-        read_size: usize,
-        write_size: usize,
-    ) -> Self {
-        Self {
-            ptr,
-            read_size,
-            write_size,
-            return_size: 0,
-        }
-    }
-
-    pub fn return_size(&self) -> usize {
-        self.return_size
-    }
-
-    pub fn read<T>(&self, obj: &mut T) -> Result<(), Error> {
-        if core::mem::size_of::<T>() != self.read_size {
-            return Err(Error::ACCESS_VIOLATION);
-        }
-
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                self.ptr as _,
-                obj,
-                core::mem::size_of::<T>(),
-            );
-        }
-
-        Ok(())
-    }
-
-    pub fn write<T>(&mut self, obj: &T) -> Result<(), Error> {
-        if core::mem::size_of::<T>() > self.write_size {
-            return Err(Error::ACCESS_VIOLATION);
-        }
-
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                obj,
-                self.ptr as _,
-                core::mem::size_of::<T>(),
-            );
-        }
-
-        self.return_size = core::mem::size_of::<T>();
-
-        Ok(())
-    }
 }
 
 pub unsafe extern "C" fn dispatch_device(

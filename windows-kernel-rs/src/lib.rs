@@ -10,10 +10,12 @@ pub mod driver;
 pub mod error;
 pub mod io;
 pub mod string;
+pub mod user_ptr;
 
-pub use crate::device::{Device, DeviceOperations, dispatch_device, UserPtr};
+pub use crate::device::{Device, DeviceOperations, dispatch_device};
 pub use crate::driver::Driver;
 pub use crate::error::Error;
+pub use crate::user_ptr::UserPtr;
 
 pub use widestring::U16CString;
 pub use windows_kernel_sys::base::{DRIVER_OBJECT, IRP_MJ_MAXIMUM_FUNCTION, NTSTATUS, STATUS_SUCCESS, UNICODE_STRING};
