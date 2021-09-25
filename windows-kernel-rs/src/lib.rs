@@ -35,8 +35,8 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 pub static _fltused: i32 = 0;
 
 #[no_mangle]
-pub extern "system" fn __CxxFrameHandler3(_: *mut u8, _: *mut u8, _: *mut u8, _: *mut u8) -> i32 {
-    unimplemented!()
+pub extern "system" fn __CxxFrameHandler3() -> i32 {
+    0
 }
 
 #[macro_export]
