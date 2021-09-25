@@ -24,6 +24,10 @@ unsafe impl Sync for Device {}
 
 impl Drop for Device {
     fn drop(&mut self) {
+        if self.raw.is_null() {
+            return;
+        }
+
         unsafe {    
             let extension = (*self.raw).DeviceExtension as *mut DeviceExtension;
             let vtable = (*extension).vtable;
@@ -38,21 +42,20 @@ impl Drop for Device {
 }
 
 pub trait DeviceOperations: Sync + Sized {
-    fn create(&mut self, _device: Device) -> Result<(), Error> {
+    fn create(&mut self, _device: &Device) -> Result<(), Error> {
         Ok(())
     }
 
-    fn close(&mut self, _device: Device) -> Result<(), Error> {
+    fn close(&mut self, _device: &Device) -> Result<(), Error> {
         Ok(())
     }
 
-    fn cleanup(&mut self, _device: Device) -> Result<(), Error> {
+    fn cleanup(&mut self, _device: &Device) -> Result<(), Error> {
         Ok(())
     }
 
-    fn ioctl(
-        &mut self,
-        _device: Device,
+    fn ioctl(&mut self,
+        _device: &Device,
         _ioctl_num: u32,
         _user_ptr: &mut UserPtr,
     ) -> Result<(), Error> {
@@ -65,12 +68,16 @@ unsafe extern "C" fn create_callback<T: DeviceOperations>(
 ) -> NTSTATUS {
     let extension = (*device).DeviceExtension as *mut DeviceExtension;
     let data = &mut *((*extension).data as *mut T);
-    let device = Device { raw: device };
+    let mut device = Device { raw: device };
 
-    match data.create(device) {
+    let status = match data.create(&device) {
         Ok(()) => STATUS_SUCCESS,
         Err(e) => e.to_kernel_errno(),
-    }
+    };
+
+    device.raw = core::ptr::null_mut();
+
+    status
 }
 
 unsafe extern "C" fn close_callback<T: DeviceOperations>(
@@ -78,12 +85,16 @@ unsafe extern "C" fn close_callback<T: DeviceOperations>(
 ) -> NTSTATUS {
     let extension = (*device).DeviceExtension as *mut DeviceExtension;
     let data = &mut *((*extension).data as *mut T);
-    let device = Device { raw: device };
+    let mut device = Device { raw: device };
 
-    match data.close(device) {
+    let status = match data.close(&device) {
         Ok(()) => STATUS_SUCCESS,
         Err(e) => e.to_kernel_errno(),
-    }
+    };
+
+    device.raw = core::ptr::null_mut();
+
+    status
 }
 
 unsafe extern "C" fn cleanup_callback<T: DeviceOperations>(
@@ -91,12 +102,16 @@ unsafe extern "C" fn cleanup_callback<T: DeviceOperations>(
 ) -> NTSTATUS {
     let extension = (*device).DeviceExtension as *mut DeviceExtension;
     let data = &mut *((*extension).data as *mut T);
-    let device = Device { raw: device };
+    let mut device = Device { raw: device };
 
-    match data.cleanup(device) {
+    let status = match data.cleanup(&device) {
         Ok(()) => STATUS_SUCCESS,
         Err(e) => e.to_kernel_errno(),
-    }
+    };
+
+    device.raw = core::ptr::null_mut();
+
+    status
 }
 
 unsafe extern "C" fn ioctl_callback<T: DeviceOperations>(
@@ -109,13 +124,15 @@ unsafe extern "C" fn ioctl_callback<T: DeviceOperations>(
 ) -> NTSTATUS {
     let extension = (*device).DeviceExtension as *mut DeviceExtension;
     let data = &mut *((*extension).data as *mut T);
-    let device = Device { raw: device };
+    let mut device = Device { raw: device };
     let mut user_ptr = UserPtr::new(ptr, read_size, write_size);
 
-    let status = match data.ioctl(device, ioctl_num, &mut user_ptr) {
+    let status = match data.ioctl(&device, ioctl_num, &mut user_ptr) {
         Ok(()) => STATUS_SUCCESS,
         Err(e) => e.to_kernel_errno(),
     };
+
+    device.raw = core::ptr::null_mut();
 
     *return_size = user_ptr.return_size();
 
@@ -126,7 +143,7 @@ unsafe extern fn release_callback<T: DeviceOperations>(
     device: *mut DEVICE_OBJECT,
 ) {
     let extension = (*device).DeviceExtension as *mut DeviceExtension;
-
+    
     let ptr = core::mem::replace(&mut (*extension).data, core::ptr::null_mut());
     Box::from_raw(ptr as *mut T);
 }
