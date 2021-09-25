@@ -7,9 +7,9 @@ fn alloc_error(_: Layout) -> ! {
     loop {}
 }
 
-pub struct KernelAlloc;
+pub struct KernelAllocator;
 
-unsafe impl GlobalAlloc for KernelAlloc {
+unsafe impl GlobalAlloc for KernelAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let ptr = ExAllocatePool(POOL_TYPE::NonPagedPool, layout.size() as u64);
 

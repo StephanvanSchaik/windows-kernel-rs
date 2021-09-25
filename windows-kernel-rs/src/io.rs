@@ -13,7 +13,7 @@ macro_rules! println {
 
 #[doc(hidden)]
 pub fn _print(args: core::fmt::Arguments) {
-    let s = other_alloc::format!("{}\0", args);
+    let s = alloc::format!("{}\0", args);
 
     // Print the string.
     unsafe { DbgPrint(s.as_ptr() as _) };

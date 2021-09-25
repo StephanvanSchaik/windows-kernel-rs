@@ -2,7 +2,7 @@
 
 #![feature(alloc_error_handler)]
 
-extern crate alloc as other_alloc;
+extern crate alloc;
 
-pub mod alloc;
+pub mod allocator;
 pub mod io;
