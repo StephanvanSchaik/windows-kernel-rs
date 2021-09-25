@@ -9,7 +9,7 @@ use windows_kernel_sys::base::{
 pub struct Error(NTSTATUS);
 
 impl Error {
-    pub const UNSUCCESSFULL: Error = Error(STATUS_UNSUCCESSFUL);
+    pub const UNSUCCESSFUL: Error = Error(STATUS_UNSUCCESSFUL);
     pub const NOT_IMPLEMENTED: Error = Error(STATUS_NOT_IMPLEMENTED);
     pub const ACCESS_VIOLATION: Error = Error(STATUS_ACCESS_VIOLATION);
     pub const INVALID_PARAMETER: Error = Error(STATUS_INVALID_PARAMETER);
