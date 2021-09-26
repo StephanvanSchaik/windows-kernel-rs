@@ -1,10 +1,87 @@
 use alloc::boxed::Box;
+use bitflags::bitflags;
 use crate::error::Error;
 use crate::user_ptr::UserPtr;
 use windows_kernel_sys::base::{DEVICE_OBJECT, IO_NO_INCREMENT, IRP, NTSTATUS};
 use windows_kernel_sys::base::{STATUS_INVALID_PARAMETER, STATUS_SUCCESS};
 use windows_kernel_sys::base::{IRP_MJ_CREATE, IRP_MJ_CLOSE, IRP_MJ_CLEANUP, IRP_MJ_DEVICE_CONTROL};
 use windows_kernel_sys::ntoskrnl::{IoCompleteRequest, IoDeleteDevice, IoGetCurrentIrpStackLocation};
+
+#[derive(Copy, Clone, Debug)]
+pub enum Access {
+    NonExclusive,
+    Exclusive,
+}
+
+impl Access {
+    pub fn is_exclusive(&self) -> bool {
+        match *self {
+            Access::Exclusive => true,
+            _ => false,
+        }
+    }
+}
+
+bitflags! {
+    pub struct DeviceFlags: u32 {
+        const SECURE_OPEN = windows_kernel_sys::base::FILE_DEVICE_SECURE_OPEN;
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum DeviceType {
+    Port8042,
+    Acpi,
+    Battery,
+    Beep,
+    BusExtender,
+    Cdrom,
+    CdromFileSystem,
+    Changer,
+    Controller,
+    DataLink,
+    Dfs,
+    DfsFileSystem,
+    DfsVolume,
+    Disk,
+    DiskFileSystem,
+    Dvd,
+    FileSystem,
+    Unknown,
+    Video,
+    VirtualDisk,
+    WaveIn,
+    WaveOut,
+}
+
+impl Into<u32> for DeviceType {
+    fn into(self) -> u32 {
+        match self {
+            DeviceType::Port8042 => windows_kernel_sys::base::FILE_DEVICE_8042_PORT,
+            DeviceType::Acpi => windows_kernel_sys::base::FILE_DEVICE_ACPI,
+            DeviceType::Battery => windows_kernel_sys::base::FILE_DEVICE_BATTERY,
+            DeviceType::Beep => windows_kernel_sys::base::FILE_DEVICE_BEEP,
+            DeviceType::BusExtender => windows_kernel_sys::base::FILE_DEVICE_BUS_EXTENDER,
+            DeviceType::Cdrom => windows_kernel_sys::base::FILE_DEVICE_CD_ROM,
+            DeviceType::CdromFileSystem => windows_kernel_sys::base::FILE_DEVICE_CD_ROM_FILE_SYSTEM,
+            DeviceType::Changer => windows_kernel_sys::base::FILE_DEVICE_CHANGER,
+            DeviceType::Controller => windows_kernel_sys::base::FILE_DEVICE_CONTROLLER,
+            DeviceType::DataLink => windows_kernel_sys::base::FILE_DEVICE_DATALINK,
+            DeviceType::Dfs => windows_kernel_sys::base::FILE_DEVICE_DFS,
+            DeviceType::DfsFileSystem => windows_kernel_sys::base::FILE_DEVICE_DFS_FILE_SYSTEM,
+            DeviceType::DfsVolume => windows_kernel_sys::base::FILE_DEVICE_DFS_VOLUME,
+            DeviceType::Disk => windows_kernel_sys::base::FILE_DEVICE_DISK,
+            DeviceType::DiskFileSystem => windows_kernel_sys::base::FILE_DEVICE_DISK_FILE_SYSTEM,
+            DeviceType::Dvd => windows_kernel_sys::base::FILE_DEVICE_DVD,
+            DeviceType::FileSystem => windows_kernel_sys::base::FILE_DEVICE_FILE_SYSTEM,
+            DeviceType::Unknown => windows_kernel_sys::base::FILE_DEVICE_UNKNOWN,
+            DeviceType::Video => windows_kernel_sys::base::FILE_DEVICE_VIDEO,
+            DeviceType::VirtualDisk => windows_kernel_sys::base::FILE_DEVICE_VIRTUAL_DISK,
+            DeviceType::WaveIn => windows_kernel_sys::base::FILE_DEVICE_WAVE_IN,
+            DeviceType::WaveOut => windows_kernel_sys::base::FILE_DEVICE_WAVE_OUT,
+        }
+    }
+}
 
 #[repr(C)]
 pub struct device_operations {

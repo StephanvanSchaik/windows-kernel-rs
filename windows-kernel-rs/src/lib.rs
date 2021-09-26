@@ -13,7 +13,7 @@ pub mod string;
 pub mod symbolic_link;
 pub mod user_ptr;
 
-pub use crate::device::{Device, DeviceOperations, dispatch_device};
+pub use crate::device::{Access, Device, DeviceFlags, DeviceOperations, DeviceType, dispatch_device};
 pub use crate::driver::Driver;
 pub use crate::error::Error;
 pub use crate::symbolic_link::SymbolicLink;
@@ -97,5 +97,6 @@ macro_rules! kernel_module {
 
 pub trait KernelModule: Sized + Sync {
     fn init(driver: Driver, registry_path: &str) -> Result<Self, Error>;
-    fn cleanup(&mut self, driver: Driver);
+    fn cleanup(&mut self, driver: Driver) {
+    }
 }

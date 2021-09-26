@@ -1,9 +1,9 @@
 use alloc::boxed::Box;
-use crate::device::{Device, DeviceExtension, DeviceOperations, DeviceOperationsVtable};
+use crate::device::{Access, Device, DeviceExtension, DeviceFlags, DeviceOperations, DeviceOperationsVtable, DeviceType};
 use crate::error::Error;
 use crate::string::create_unicode_string;
 use widestring::U16CString;
-use windows_kernel_sys::base::{DRIVER_OBJECT, FILE_DEVICE_UNKNOWN, FILE_DEVICE_SECURE_OPEN, STATUS_SUCCESS};
+use windows_kernel_sys::base::{DRIVER_OBJECT, STATUS_SUCCESS};
 use windows_kernel_sys::ntoskrnl::{IoCreateDevice};
 
 pub struct Driver {
@@ -25,7 +25,17 @@ impl Driver {
         self.raw as _
     }
 
-    pub fn create_device<T: DeviceOperations>(&mut self, name: &str, data: T) -> Result<Device, Error> {
+    pub fn create_device<T>(
+        &mut self,
+        name: &str,
+        device_type: DeviceType,
+        device_flags: DeviceFlags,
+        access: Access,
+        data: T,
+    ) -> Result<Device, Error>
+    where
+        T: DeviceOperations
+    {
         // Box the data.
         let data = Box::new(data);
 
@@ -41,9 +51,9 @@ impl Driver {
                 self.raw,
                 core::mem::size_of::<DeviceExtension>() as u32,
                 &mut name,
-                FILE_DEVICE_UNKNOWN,
-                FILE_DEVICE_SECURE_OPEN,
-                false as _,
+                device_type.into(),
+                device_flags.bits(),
+                access.is_exclusive() as _,
                 &mut device,
             )
         };
