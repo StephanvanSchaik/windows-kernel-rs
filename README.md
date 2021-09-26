@@ -10,3 +10,4 @@ In addition, there are articles that covers implementing Windows kernel drivers 
 2. [Hello World](https://codentium.com/guides/windows-dev/windows-drivers-in-rust-hello-world) - [02-hello-world](02-hello-world)
 3. [Generating Bindings](https://codentium.com/guides/windows-dev/windows-drivers-in-rust-generating-bindings) - [03-generating-bindings](03-generating-bindings)
 4. [Safe Framework](https://codentium.com/guides/windows-dev/windows-drivers-in-rust-safe-framework) - [04-safe-framework](04-safe-framework)
+5. [Creating Devices](https://codentium.com/guides/windows-dev/windows-drivers-in-rust-creating-devices/) - [05-creating-devices](05-creating-devices)
