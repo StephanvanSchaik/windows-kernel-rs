@@ -1,6 +1,6 @@
 #![no_std]
 
-use windows_kernel_rs::{Access, Device, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, kernel_module, KernelModule, println, SymbolicLink, UserPtr};
+use windows_kernel_rs::{Access, Device, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, kernel_module, KernelModule, println, SymbolicLink};
 
 struct MyDevice;
 
@@ -17,11 +17,6 @@ impl DeviceOperations for MyDevice {
 
     fn cleanup(&mut self, device: &Device) -> Result<(), Error> {
         println!("device is no longer in use by userspace");
-        Ok(())
-    }
-
-    fn ioctl(&mut self, device: &Device, ioctl_num: u32, user_ptr: &mut UserPtr) -> Result<(), Error> {
-        println!("request from userspace");
         Ok(())
     }
 }
