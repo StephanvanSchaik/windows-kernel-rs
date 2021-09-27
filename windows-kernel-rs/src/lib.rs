@@ -97,6 +97,6 @@ macro_rules! kernel_module {
 
 pub trait KernelModule: Sized + Sync {
     fn init(driver: Driver, registry_path: &str) -> Result<Self, Error>;
-    fn cleanup(&mut self, driver: Driver) {
+    fn cleanup(&mut self, _driver: Driver) {
     }
 }
