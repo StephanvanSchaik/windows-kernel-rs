@@ -62,19 +62,13 @@ impl Driver {
             return Err(Error::from_kernel_errno(status));
         }
 
-        // Get the device extension.
-        let extension = unsafe {
-            (*device).DeviceExtension as *mut DeviceExtension
-        };
+        let device = unsafe { Device::from_raw(device) };
 
         // Store the boxed data and vtable.
-        unsafe {
-            (*extension).vtable = &DeviceOperationsVtable::<T>::VTABLE;
-            (*extension).data = Box::into_raw(data) as *mut cty::c_void;
-        }
+        let extension = device.extension_mut();
+        extension.vtable = &DeviceOperationsVtable::<T>::VTABLE;
+        extension.data = Box::into_raw(data) as *mut cty::c_void;
 
-        Ok(Device {
-            raw: device,
-        })
+        Ok(device)
     }
 }
