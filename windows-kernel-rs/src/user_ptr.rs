@@ -26,7 +26,7 @@ impl UserPtr {
     }
 
     pub fn read<T>(&self, obj: &mut T) -> Result<(), Error> {
-        if core::mem::size_of::<T>() != self.read_size {
+        if core::mem::size_of::<T>() > self.read_size {
             return Err(Error::ACCESS_VIOLATION);
         }
 
