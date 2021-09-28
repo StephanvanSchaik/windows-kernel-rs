@@ -1,5 +1,6 @@
 use bitflags::bitflags;
 use crate::error::Error;
+use crate::ioctl::ControlCode;
 use crate::user_ptr::UserPtr;
 use windows_kernel_sys::base::{IO_NO_INCREMENT, IO_STACK_LOCATION, IRP, STATUS_SUCCESS};
 use windows_kernel_sys::base::{IRP_MJ_READ, IRP_MJ_WRITE, IRP_MJ_DEVICE_CONTROL};
@@ -78,12 +79,12 @@ impl IoRequest {
         }
     }
 
-    pub fn ioctl_code(&self) -> Option<u32> {
+    pub fn control_code(&self) -> Option<ControlCode> {
         let stack_location = self.stack_location();
 
         match self.major() as _ {
             IRP_MJ_DEVICE_CONTROL => Some(unsafe {
-                stack_location.Parameters.DeviceIoControl.IoControlCode
+                stack_location.Parameters.DeviceIoControl.IoControlCode.into()
             }),
             _ => None,
         }
