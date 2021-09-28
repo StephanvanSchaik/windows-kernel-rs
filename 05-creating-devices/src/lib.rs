@@ -1,22 +1,31 @@
 #![no_std]
 
-use windows_kernel_rs::{Access, Device, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, kernel_module, KernelModule, println, SymbolicLink};
+use windows_kernel_rs::{Access, Device, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, IoRequest, kernel_module, KernelModule, println, SymbolicLink};
 
 struct MyDevice;
 
 impl DeviceOperations for MyDevice {
-    fn create(&mut self, device: &Device) -> Result<(), Error> {
+    fn create(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
         println!("userspace opened the device");
+
+        request.complete(Ok(0));
+
         Ok(())
     }
 
-    fn close(&mut self, device: &Device) -> Result<(), Error> {
+    fn close(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
         println!("userspace closed the device");
+
+        request.complete(Ok(0));
+
         Ok(())
     }
 
-    fn cleanup(&mut self, device: &Device) -> Result<(), Error> {
+    fn cleanup(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
         println!("device is no longer in use by userspace");
+
+        request.complete(Ok(0));
+
         Ok(())
     }
 }
