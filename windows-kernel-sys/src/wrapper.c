@@ -25,3 +25,15 @@ void _IoCompleteRequest(
 ) {
 	IoCompleteRequest(irp, priority_boost);
 }
+
+ULONG _MmGetMdlByteCount(PMDL mdl) {
+	return MmGetMdlByteCount(mdl);
+}
+
+ULONG _MmGetMdlByteOffset(PMDL mdl) {
+	return MmGetMdlByteOffset(mdl);
+}
+
+PVOID _MmGetSystemAddressForMdlSafe(PMDL mdl, ULONG priority) {
+	return MmGetSystemAddressForMdlSafe(mdl, priority);
+}

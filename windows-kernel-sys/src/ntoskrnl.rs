@@ -17,11 +17,17 @@ extern "C" {
         invoke_on_cancel: BOOLEAN,
     );
     pub fn _IoCompleteRequest(irp: PIRP, priority_boost: CCHAR);
+    pub fn _MmGetMdlByteCount(mdl: PMDL) -> ULONG;
+    pub fn _MmGetMdlByteOffset(mdl: PMDL) -> ULONG;
+    pub fn _MmGetSystemAddressForMdlSafe(mdl: PMDL, priority: ULONG) -> PVOID;
 }
 
 pub use self::_IoGetCurrentIrpStackLocation as IoGetCurrentIrpStackLocation;
 pub use self::_IoGetNextIrpStackLocation as IoGetNextIrpStackLocation;
 pub use self::_IoSetCompletionRoutine as IoSetCompletionRoutine;
 pub use self::_IoCompleteRequest as IoCompleteRequest;
+pub use self::_MmGetMdlByteCount as MmGetMdlByteCount;
+pub use self::_MmGetMdlByteOffset as MmGetMdlByteOffset;
+pub use self::_MmGetSystemAddressForMdlSafe as MmGetSystemAddressForMdlSafe;
 
 include!(concat!(env!("OUT_DIR"), "/ntoskrnl.rs"));
