@@ -15,7 +15,7 @@ pub mod string;
 pub mod symbolic_link;
 pub mod user_ptr;
 
-pub use crate::device::{Access, Device, DeviceFlags, DeviceOperations, DeviceType, dispatch_device};
+pub use crate::device::{Access, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, dispatch_device};
 pub use crate::driver::Driver;
 pub use crate::error::Error;
 pub use crate::ioctl::{ControlCode, RequiredAccess, TransferMethod};

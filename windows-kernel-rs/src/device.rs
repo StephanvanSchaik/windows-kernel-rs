@@ -28,6 +28,13 @@ bitflags! {
     }
 }
 
+bitflags! {
+    pub struct DeviceDoFlags: u32 {
+        const DO_BUFFERED_IO = windows_kernel_sys::base::DO_BUFFERED_IO;
+        const DO_DIRECT_IO   = windows_kernel_sys::base::DO_DIRECT_IO;
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum DeviceType {
     Port8042,

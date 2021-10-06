@@ -1,5 +1,5 @@
 use alloc::boxed::Box;
-use crate::device::{Access, Device, DeviceExtension, DeviceFlags, DeviceOperations, DeviceOperationsVtable, DeviceType};
+use crate::device::{Access, Device, DeviceExtension, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceOperationsVtable, DeviceType};
 use crate::error::Error;
 use crate::string::create_unicode_string;
 use widestring::U16CString;
@@ -30,6 +30,7 @@ impl Driver {
         name: &str,
         device_type: DeviceType,
         device_flags: DeviceFlags,
+        device_do_flags: DeviceDoFlags,
         access: Access,
         data: T,
     ) -> Result<Device, Error>
@@ -60,6 +61,10 @@ impl Driver {
 
         if status != STATUS_SUCCESS {
             return Err(Error::from_kernel_errno(status));
+        }
+
+        unsafe {
+            (*device).Flags |= device_do_flags.bits();
         }
 
         let device = unsafe { Device::from_raw(device) };
