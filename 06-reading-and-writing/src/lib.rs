@@ -1,26 +1,33 @@
 #![no_std]
 
-use windows_kernel_rs::{Access, Device, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, IoRequest, kernel_module, KernelModule, SymbolicLink};
+extern crate alloc;
+
+use alloc::vec;
+use alloc::vec::Vec;
+use windows_kernel_rs::{Access, Device, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, kernel_module, KernelModule, SymbolicLink, ReadRequest, WriteRequest};
 
 struct MyDevice {
-    value: u32,
+    data: Vec<u8>,
 }
 
 impl DeviceOperations for MyDevice {
-    fn read(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
-        let mut user_ptr = request.user_ptr().unwrap();
+    fn read(&mut self, _device: &Device, request: &ReadRequest) -> Result<(), Error> {
+        let mut user_ptr = request.user_ptr();
+        let size = user_ptr.write_size().min(self.data.len());
+        let slice = user_ptr.as_mut_slice();
 
-        user_ptr.write(&self.value)?;
+        slice[0..size].copy_from_slice(&self.data[0..size]);
 
-        request.complete(Ok(0));
+        request.complete(Ok(size as u32));
 
         Ok(())
     }
 
-    fn write(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
-        let user_ptr = request.user_ptr().unwrap();
+    fn write(&mut self, _device: &Device, request: &WriteRequest) -> Result<(), Error> {
+        let user_ptr = request.user_ptr();
+        let slice = user_ptr.as_slice();
 
-        user_ptr.read(&mut self.value)?;
+        self.data = slice[0..slice.len().min(4096)].to_vec();
 
         request.complete(Ok(0));
 
@@ -40,7 +47,9 @@ impl KernelModule for Module {
             DeviceType::Unknown,
             DeviceFlags::SECURE_OPEN,
             Access::NonExclusive,
-            MyDevice { value: 0 },
+            MyDevice {
+                data: vec![],
+            },
         )?;
         let symbolic_link = SymbolicLink::new("\\??\\Example", "\\Device\\Example")?;
 
