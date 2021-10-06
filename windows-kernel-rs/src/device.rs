@@ -385,7 +385,11 @@ extern "C" fn dispatch_callback<T: DeviceOperations>(
 
     match status {
         Ok(()) => STATUS_SUCCESS,
-        Err(e) => e.to_kernel_errno(),
+        Err(e) => {
+            let status = e.to_kernel_errno();
+            request.complete(Err(e));
+            status
+        }
     }
 }
 
