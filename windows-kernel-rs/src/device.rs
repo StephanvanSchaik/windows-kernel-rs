@@ -1,7 +1,7 @@
 use alloc::boxed::Box;
 use bitflags::bitflags;
 use crate::error::Error;
-use crate::request::IoRequest;
+use crate::request::{IoRequest, IoControlRequest, ReadRequest, WriteRequest};
 use windows_kernel_sys::base::{DEVICE_OBJECT, IRP, NTSTATUS};
 use windows_kernel_sys::base::STATUS_SUCCESS;
 use windows_kernel_sys::base::{IRP_MJ_CREATE, IRP_MJ_CLOSE, IRP_MJ_CLEANUP, IRP_MJ_READ, IRP_MJ_WRITE, IRP_MJ_DEVICE_CONTROL};
@@ -316,17 +316,17 @@ pub trait DeviceOperations: Sync + Sized {
         Ok(())
     }
 
-    fn read(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
+    fn read(&mut self, _device: &Device, request: &ReadRequest) -> Result<(), Error> {
         request.complete(Ok(0));
         Ok(())
     }
 
-    fn write(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
+    fn write(&mut self, _device: &Device, request: &WriteRequest) -> Result<(), Error> {
         request.complete(Ok(0));
         Ok(())
     }
 
-    fn ioctl(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
+    fn ioctl(&mut self, _device: &Device, request: &IoControlRequest) -> Result<(), Error> {
         request.complete(Ok(0));
         Ok(())
     }
@@ -339,15 +339,42 @@ extern "C" fn dispatch_callback<T: DeviceOperations>(
 ) -> NTSTATUS {
     let device = unsafe { Device::from_raw(device) };
     let data: &mut T = device.data_mut();
-    let request = unsafe { IoRequest::from_raw(irp) };
+    let mut request = unsafe { IoRequest::from_raw(irp) };
 
     let status = match major as _ {
         IRP_MJ_CREATE => data.create(&device, &request),
         IRP_MJ_CLOSE => data.close(&device, &request),
         IRP_MJ_CLEANUP => data.cleanup(&device, &request),
-        IRP_MJ_READ => data.read(&device, &request),
-        IRP_MJ_WRITE => data.write(&device, &request),
-        IRP_MJ_DEVICE_CONTROL => data.ioctl(&device, &request),
+        IRP_MJ_READ => {
+            let read_request = ReadRequest {
+                inner: request,
+            };
+
+            let status = data.read(&device, &read_request);
+
+            request = read_request.inner;
+            status
+        }
+        IRP_MJ_WRITE => {
+            let write_request = WriteRequest {
+                inner: request,
+            };
+
+            let status = data.write(&device, &write_request);
+
+            request = write_request.inner;
+            status
+        }
+        IRP_MJ_DEVICE_CONTROL => {
+            let control_request = IoControlRequest {
+                inner: request,
+            };
+
+            let status = data.ioctl(&device, &control_request);
+
+            request = control_request.inner;
+            status
+        }
         _ => {
             request.complete(Err(Error::INVALID_PARAMETER));
             Err(Error::INVALID_PARAMETER)
