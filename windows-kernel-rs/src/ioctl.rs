@@ -64,6 +64,22 @@ impl ControlCode {
     const NUM_MASK:    u32 = (1 << Self::NUM_BITS) - 1;
     const ACCESS_MASK: u32 = (1 << Self::ACCESS_BITS) - 1;
     const TYPE_MASK:   u32 = (1 << Self::TYPE_BITS) - 1;
+
+    pub fn device_type(&self) -> DeviceType {
+        self.0
+    }
+
+    pub fn required_access(&self) -> RequiredAccess {
+        self.1
+    }
+
+    pub fn number(&self) -> u32 {
+        self.2
+    }
+
+    pub fn transfer_method(&self) -> TransferMethod {
+        self.3
+    }
 }
 
 impl From<u32> for ControlCode {

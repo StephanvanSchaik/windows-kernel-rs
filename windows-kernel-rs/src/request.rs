@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use core::ops::Deref;
 use crate::error::Error;
-use crate::ioctl::ControlCode;
+use crate::ioctl::{ControlCode, TransferMethod};
 use crate::user_ptr::UserPtr;
 use windows_kernel_sys::base::{IO_NO_INCREMENT, IO_STACK_LOCATION, IRP, STATUS_SUCCESS};
 use windows_kernel_sys::base::_MM_PAGE_PRIORITY as MM_PAGE_PRIORITY;
@@ -190,6 +190,12 @@ impl Deref for IoControlRequest {
     }
 }
 
+pub enum IoControlBuffers {
+    Buffered(UserPtr),
+    Direct(UserPtr, UserPtr),
+    Neither,
+}
+
 impl IoControlRequest {
     pub fn control_code(&self) -> ControlCode {
         let stack_location = self.stack_location();
@@ -199,11 +205,18 @@ impl IoControlRequest {
         }
     }
 
-    pub fn user_ptr(&self) -> UserPtr { 
+    pub fn user_ptr(&self) -> IoControlBuffers { 
         let stack_location = self.stack_location();
         let irp = self.irp();
 
-        let ptr = unsafe { irp.AssociatedIrp.SystemBuffer };
+        let system_buffer = unsafe { irp.AssociatedIrp.SystemBuffer };
+
+        let mdl_address = if !irp.MdlAddress.is_null() {
+            unsafe { MmGetSystemAddressForMdlSafe(irp.MdlAddress, MM_PAGE_PRIORITY::HighPagePriority as _) }
+        } else {
+            core::ptr::null_mut()
+        };
+
         let input_size = unsafe {
             stack_location.Parameters.DeviceIoControl.InputBufferLength
         } as usize;
@@ -211,6 +224,25 @@ impl IoControlRequest {
             stack_location.Parameters.DeviceIoControl.OutputBufferLength
         } as usize;
 
-        unsafe { UserPtr::new(ptr, input_size, output_size) }
+        match self.control_code().transfer_method() {
+            TransferMethod::Buffered => {
+                IoControlBuffers::Buffered(
+                    unsafe { UserPtr::new(system_buffer, input_size, output_size) },
+                )
+            }
+            TransferMethod::InputDirect => {
+                IoControlBuffers::Direct(
+                    unsafe { UserPtr::new(mdl_address, output_size, 0 ) },
+                    unsafe { UserPtr::new(system_buffer, 0, input_size) },
+                )
+            }
+            TransferMethod::OutputDirect => {
+                IoControlBuffers::Direct(
+                    unsafe { UserPtr::new(system_buffer, input_size, 0) },
+                    unsafe { UserPtr::new(mdl_address, 0, output_size) },
+                )
+            }
+            TransferMethod::Neither => IoControlBuffers::Neither,
+        }
     }
 }
