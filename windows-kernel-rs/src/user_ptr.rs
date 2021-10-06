@@ -41,7 +41,7 @@ impl UserPtr {
 
     pub fn read<T>(&self, obj: &mut T) -> Result<(), Error> {
         if core::mem::size_of::<T>() > self.read_size {
-            return Err(Error::ACCESS_VIOLATION);
+            return Err(Error::INVALID_USER_BUFFER);
         }
 
         unsafe {
@@ -57,7 +57,7 @@ impl UserPtr {
 
     pub fn write<T>(&mut self, obj: &T) -> Result<(), Error> {
         if core::mem::size_of::<T>() > self.write_size {
-            return Err(Error::ACCESS_VIOLATION);
+            return Err(Error::INVALID_USER_BUFFER);
         }
 
         unsafe {
