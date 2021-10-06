@@ -13,10 +13,12 @@ struct MyDevice {
 impl DeviceOperations for MyDevice {
     fn read(&mut self, _device: &Device, request: &ReadRequest) -> Result<(), Error> {
         let mut user_ptr = request.user_ptr();
-        let size = user_ptr.write_size().min(self.data.len());
         let slice = user_ptr.as_mut_slice();
 
-        slice[0..size].copy_from_slice(&self.data[0..size]);
+        let offset = (request.offset() as usize).min(self.data.len());
+        let size = slice.len().min(self.data.len() - offset);
+
+        slice[0..size].copy_from_slice(&self.data[offset..offset + size]);
 
         request.complete(Ok(size as u32));
 
@@ -25,11 +27,17 @@ impl DeviceOperations for MyDevice {
 
     fn write(&mut self, _device: &Device, request: &WriteRequest) -> Result<(), Error> {
         let user_ptr = request.user_ptr();
+
+        if request.offset() > 0 {
+            return Err(Error::END_OF_FILE)?;
+        }
+
         let slice = user_ptr.as_slice();
+        let size = slice.len().min(4096);
 
-        self.data = slice[0..slice.len().min(4096)].to_vec();
+        self.data = slice[0..size].to_vec();
 
-        request.complete(Ok(0));
+        request.complete(Ok(size as u32));
 
         Ok(())
     }
@@ -58,9 +66,6 @@ impl KernelModule for Module {
             _device: device,
             _symbolic_link: symbolic_link,
         })
-    }
-
-    fn cleanup(&mut self, _driver: Driver) {
     }
 }
 
