@@ -96,14 +96,8 @@ impl ReadRequest {
     pub fn user_ptr(&self) -> UserPtr {
         let stack_location = self.stack_location();
         let irp = self.irp();
-        let flags = self.flags();
 
-        if flags.contains(IrpFlags::BUFFERED_IO) {
-            let ptr = unsafe { irp.AssociatedIrp.SystemBuffer };
-            let size = unsafe { stack_location.Parameters.Read }.Length as usize;
-
-            unsafe { UserPtr::new(ptr, 0, size) }
-        } else {
+        if !irp.MdlAddress.is_null() {
             let ptr = unsafe {
                 MmGetSystemAddressForMdlSafe(irp.MdlAddress, MM_PAGE_PRIORITY::HighPagePriority as _)
             };
@@ -111,18 +105,26 @@ impl ReadRequest {
             let size = unsafe { MmGetMdlByteCount(irp.MdlAddress) } as usize;
 
             unsafe { UserPtr::new(ptr, 0, size) }
+        } else if !unsafe { irp.AssociatedIrp.SystemBuffer }.is_null() { 
+            let ptr = unsafe { irp.AssociatedIrp.SystemBuffer };
+            let size = unsafe { stack_location.Parameters.Read }.Length as usize;
+
+            unsafe { UserPtr::new(ptr, 0, size) }
+        } else {
+            unsafe { UserPtr::new(core::ptr::null_mut(), 0, 0) }
         }
     }
 
     pub fn offset(&self) -> i64 {
         let stack_location = self.stack_location();
         let irp = self.irp();
-        let flags = self.flags();
 
-        if flags.contains(IrpFlags::BUFFERED_IO) {
-            unsafe { stack_location.Parameters.Read.ByteOffset.QuadPart }
-        } else {
+        if !irp.MdlAddress.is_null() {
             (unsafe { MmGetMdlByteOffset(irp.MdlAddress) }) as i64
+        } else if !unsafe { irp.AssociatedIrp.SystemBuffer }.is_null() {
+            unsafe { stack_location.Parameters.Read.ByteOffset.QuadPart } 
+        } else {
+            0
         }
     }
 }
@@ -143,14 +145,8 @@ impl WriteRequest {
     pub fn user_ptr(&self) -> UserPtr {
         let stack_location = self.stack_location();
         let irp = self.irp();
-        let flags = self.flags();
 
-        if flags.contains(IrpFlags::BUFFERED_IO) {
-            let ptr = unsafe { irp.AssociatedIrp.SystemBuffer };
-            let size = unsafe { stack_location.Parameters.Read }.Length as usize;
-
-            unsafe { UserPtr::new(ptr, size, 0) }
-        } else {
+        if !irp.MdlAddress.is_null() {
             let ptr = unsafe {
                 MmGetSystemAddressForMdlSafe(irp.MdlAddress, MM_PAGE_PRIORITY::HighPagePriority as _)
             };
@@ -158,18 +154,26 @@ impl WriteRequest {
             let size = unsafe { MmGetMdlByteCount(irp.MdlAddress) } as usize;
 
             unsafe { UserPtr::new(ptr, size, 0) }
+        } else if !unsafe {irp.AssociatedIrp.SystemBuffer }.is_null() {             
+            let ptr = unsafe { irp.AssociatedIrp.SystemBuffer };
+            let size = unsafe { stack_location.Parameters.Write }.Length as usize;
+
+            unsafe { UserPtr::new(ptr, size, 0) }
+        } else {
+            unsafe { UserPtr::new(core::ptr::null_mut(), 0, 0) }
         }
     }
 
     pub fn offset(&self) -> i64 {
         let stack_location = self.stack_location();
         let irp = self.irp();
-        let flags = self.flags();
 
-        if flags.contains(IrpFlags::BUFFERED_IO) {
+        if !irp.MdlAddress.is_null() {
+            (unsafe { MmGetMdlByteOffset(irp.MdlAddress) }) as i64
+        } else if !unsafe { irp.AssociatedIrp.SystemBuffer }.is_null() {
             unsafe { stack_location.Parameters.Write.ByteOffset.QuadPart }
         } else {
-            (unsafe { MmGetMdlByteOffset(irp.MdlAddress) }) as i64
+            0
         }
     }
 }
