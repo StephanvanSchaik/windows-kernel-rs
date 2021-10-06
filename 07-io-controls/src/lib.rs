@@ -1,6 +1,6 @@
 #![no_std]
 
-use windows_kernel_rs::{Access, ControlCode, Device, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, IoControlRequest, kernel_module, KernelModule, println, RequiredAccess, SymbolicLink};
+use windows_kernel_rs::{Access, ControlCode, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, IoControlRequest, kernel_module, KernelModule, println, RequiredAccess, SymbolicLink};
 
 struct MyDevice {
     value: u32,
@@ -48,6 +48,7 @@ impl KernelModule for Module {
             "\\Device\\Example",
             DeviceType::Unknown,
             DeviceFlags::SECURE_OPEN,
+            DeviceDoFlags::DO_BUFFERED_IO,
             Access::NonExclusive,
             MyDevice {
                 value: 0,

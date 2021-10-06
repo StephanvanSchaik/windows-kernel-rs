@@ -4,7 +4,7 @@ extern crate alloc;
 
 use alloc::vec;
 use alloc::vec::Vec;
-use windows_kernel_rs::{Access, Device, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, kernel_module, KernelModule, SymbolicLink, ReadRequest, WriteRequest};
+use windows_kernel_rs::{Access, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, kernel_module, KernelModule, SymbolicLink, ReadRequest, WriteRequest};
 
 struct MyDevice {
     data: Vec<u8>,
@@ -46,6 +46,7 @@ impl KernelModule for Module {
             "\\Device\\Example",
             DeviceType::Unknown,
             DeviceFlags::SECURE_OPEN,
+            DeviceDoFlags::DO_BUFFERED_IO,
             Access::NonExclusive,
             MyDevice {
                 data: vec![],
