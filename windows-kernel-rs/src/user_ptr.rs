@@ -4,7 +4,6 @@ pub struct UserPtr {
     ptr: *mut cty::c_void,
     read_size: usize,
     write_size: usize,
-    return_size: usize,
 }
 
 impl UserPtr {
@@ -17,12 +16,27 @@ impl UserPtr {
             ptr,
             read_size,
             write_size,
-            return_size: 0,
         }
     }
 
-    pub fn return_size(&self) -> usize {
-        self.return_size
+    pub fn read_size(&self) -> usize {
+        self.read_size
+    }
+
+    pub fn write_size(&self) -> usize {
+        self.write_size
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe {
+            core::slice::from_raw_parts(self.ptr as *const u8, self.read_size)
+        }
+    }
+
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        unsafe {
+            core::slice::from_raw_parts_mut(self.ptr as *mut u8, self.write_size)
+        }
     }
 
     pub fn read<T>(&self, obj: &mut T) -> Result<(), Error> {
@@ -54,10 +68,6 @@ impl UserPtr {
             );
         }
 
-        self.return_size = core::mem::size_of::<T>();
-
         Ok(())
     }
 }
-
-
