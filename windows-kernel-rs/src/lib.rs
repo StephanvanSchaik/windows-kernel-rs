@@ -16,7 +16,7 @@ pub mod string;
 pub mod symbolic_link;
 pub mod user_ptr;
 
-pub use crate::affinity::run_on_each_cpu;
+pub use crate::affinity::{get_cpu_count, get_current_cpu_num, run_on_cpu, run_on_each_cpu};
 pub use crate::device::{Access, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, dispatch_device};
 pub use crate::driver::Driver;
 pub use crate::error::Error;
