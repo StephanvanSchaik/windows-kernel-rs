@@ -383,3 +383,35 @@ macro_rules! ioctl_write {
         }
     }
 }
+
+#[macro_export]
+macro_rules! ioctl_readwrite {
+    ($(#[$attr:meta])* $name:ident, $dev_ty:expr, $nr:expr, $ty:ty) => {
+        $(#[$attr])*
+        pub unsafe fn $name(handle: *mut std::ffi::c_void, data: *mut $ty) -> Result<u32, $crate::Error> {
+            let code = $crate::ControlCode(
+                $dev_ty,
+                $crate::RequiredAccess::READ_WRITE_DATA,
+                $nr,
+                $crate::TransferMethod::Buffered,
+            ).into();
+            let mut return_value = 0;
+
+            let status = $crate::DeviceIoControl(
+                handle as _,
+                code,
+                data as _,
+                std::mem::size_of::<$ty>() as _,
+                data as _,
+                std::mem::size_of::<$ty>() as _,
+                &mut return_value,
+                std::ptr::null_mut(),
+            ) != 0;
+
+            match status {
+                true => Ok(return_value),
+                _ => Err(std::io::Error::last_os_error())?,
+            }
+        }
+    }
+}
