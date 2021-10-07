@@ -4,6 +4,7 @@
 
 extern crate alloc;
 
+pub mod affinity;
 pub mod allocator;
 pub mod device;
 pub mod driver;
@@ -15,6 +16,7 @@ pub mod string;
 pub mod symbolic_link;
 pub mod user_ptr;
 
+pub use crate::affinity::run_on_each_cpu;
 pub use crate::device::{Access, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, dispatch_device};
 pub use crate::driver::Driver;
 pub use crate::error::Error;
