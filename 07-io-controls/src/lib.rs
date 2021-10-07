@@ -19,9 +19,9 @@ impl DeviceOperations for MyDevice {
                 request.complete(Ok(0));
             }
             ControlCode(DeviceType::Unknown, RequiredAccess::READ_DATA, IOCTL_READ_VALUE, TransferMethod::Buffered) => {
-                let user_ptr = match request.user_ptr() {
+                let mut user_ptr = match request.user_ptr() {
                     IoControlBuffers::Buffered(user_ptr) => user_ptr,
-                    _ => return Err(Error::INVALID_PARAMETER);
+                    _ => return Err(Error::INVALID_PARAMETER),
                 };
 
                 user_ptr.write(&self.value)?;
@@ -31,7 +31,7 @@ impl DeviceOperations for MyDevice {
             ControlCode(DeviceType::Unknown, RequiredAccess::WRITE_DATA, IOCTL_WRITE_VALUE, TransferMethod::Buffered) => {
                 let user_ptr = match request.user_ptr() {
                     IoControlBuffers::Buffered(user_ptr) => user_ptr,
-                    _ => return Err(Error::INVALID_PARAMETER);
+                    _ => return Err(Error::INVALID_PARAMETER),
                 };
 
                 user_ptr.read(&mut self.value)?;
