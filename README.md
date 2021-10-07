@@ -12,3 +12,4 @@ In addition, there are articles that covers implementing Windows kernel drivers 
 4. [Safe Framework](https://codentium.com/guides/windows-dev/windows-drivers-in-rust-safe-framework) - [04-safe-framework](04-safe-framework)
 5. [Creating Devices](https://codentium.com/guides/windows-dev/windows-drivers-in-rust-creating-devices/) - [05-creating-devices](05-creating-devices) - [user/05-creating-devices](user/05-creating-devices)
 6. [Reading and Writing](https://codentium.com/guides/windows-dev/windows-drivers-in-rust-reading-and-writing/) - [06-reading-and-writing](06-reading-and-writing) - [user/06-reading-and-writing](user/06-reading-and-writing)
+7. [I/O Controls](https://codentium.com/guides/windows-dev/windows-drivers-in-rust-io-controls/) - [07-io-controls](07-io-controls) - [user/07-io-controls](user/07-io-controls)
