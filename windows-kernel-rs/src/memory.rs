@@ -51,7 +51,7 @@ pub fn read_memory(
 
 pub fn write_memory(
     target: CopyAddress,
-    buffer: &mut [u8],
+    buffer: &[u8],
 ) -> Result<usize, Error> {
     let mut copy_addr: MM_COPY_ADDRESS = unsafe { core::mem::zeroed() };
     let mut bytes = 0;
