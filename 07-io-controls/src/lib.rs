@@ -1,6 +1,6 @@
 #![no_std]
 
-use windows_kernel_rs::{Access, ControlCode, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, IoControlBuffers, IoControlRequest, kernel_module, KernelModule, println, RequiredAccess, SymbolicLink, TransferMethod};
+use windows_kernel_rs::{Access, ControlCode, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, IoControlRequest, kernel_module, KernelModule, println, RequiredAccess, SymbolicLink, TransferMethod};
 
 struct MyDevice {
     value: u32,
@@ -19,22 +19,16 @@ impl DeviceOperations for MyDevice {
                 request.complete(Ok(0));
             }
             ControlCode(DeviceType::Unknown, RequiredAccess::READ_DATA, IOCTL_READ_VALUE, TransferMethod::Buffered) => {
-                let mut user_ptr = match request.user_ptr() {
-                    IoControlBuffers::Buffered(user_ptr) => user_ptr,
-                    _ => return Err(Error::INVALID_PARAMETER),
-                };
+                let mut user_ptr = request.user_ptr();
 
                 user_ptr.write(&self.value)?;
 
                 request.complete(Ok(core::mem::size_of::<u32>() as u32))
             }
             ControlCode(DeviceType::Unknown, RequiredAccess::WRITE_DATA, IOCTL_WRITE_VALUE, TransferMethod::Buffered) => {
-                let user_ptr = match request.user_ptr() {
-                    IoControlBuffers::Buffered(user_ptr) => user_ptr,
-                    _ => return Err(Error::INVALID_PARAMETER),
-                };
+                let user_ptr = request.user_ptr();
 
-                user_ptr.read(&mut self.value)?;
+                self.value = user_ptr.read()?;
 
                 request.complete(Ok(0))
             }
