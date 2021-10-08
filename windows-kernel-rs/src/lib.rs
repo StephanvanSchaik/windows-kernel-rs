@@ -9,6 +9,7 @@ pub mod allocator;
 pub mod device;
 pub mod driver;
 pub mod error;
+pub mod intrin;
 pub mod io;
 pub mod ioctl;
 pub mod request;
