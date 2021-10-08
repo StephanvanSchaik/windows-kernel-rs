@@ -37,3 +37,11 @@ ULONG _MmGetMdlByteOffset(PMDL mdl) {
 PVOID _MmGetSystemAddressForMdlSafe(PMDL mdl, ULONG priority) {
 	return MmGetSystemAddressForMdlSafe(mdl, priority);
 }
+
+void _ObDerefereneObject(PVOID p) {
+	ObDereferenceObject(p);
+}
+
+void _ObReferenceObject(PVOID p) {
+	ObReferenceObject(p);
+}
