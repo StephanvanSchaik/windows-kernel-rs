@@ -336,8 +336,8 @@ macro_rules! ioctl_read {
             let status = $crate::DeviceIoControl(
                 handle as _,
                 code,
-                std::ptr::null_mut(),
-                0, 
+                data as _,
+                std::mem::size_of::<$ty>() as _,
                 data as _,
                 std::mem::size_of::<$ty>() as _,
                 &mut return_value,
