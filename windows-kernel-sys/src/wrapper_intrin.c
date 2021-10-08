@@ -14,7 +14,7 @@ void write_cr3(unsigned __int64 Value) {
 unsigned __int64 read_msr(
 	unsigned long Register
 ) {
-	return __rdmsr(Register);
+	return __readmsr(Register);
 }
 
 NTSTATUS read_msr_safe(
@@ -38,7 +38,7 @@ void write_msr(
 	unsigned long Register,
 	unsigned __int64 Value
 ) {
-	__wrmsr(Register, Value);
+	__writemsr(Register, Value);
 }
 
 NTSTATUS write_msr_safe(
