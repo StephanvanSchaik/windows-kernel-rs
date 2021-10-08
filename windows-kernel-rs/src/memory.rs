@@ -18,7 +18,7 @@ pub fn get_virtual_for_physical(addr: u64) -> u64 {
     virt_addr as _
 }
 
-pub fn copy_memory(
+pub fn read_memory(
     buffer: &mut [u8],
     source: CopyAddress,
 ) -> Result<usize, Error> {
@@ -42,6 +42,33 @@ pub fn copy_memory(
             copy_addr,
             buffer.len() as _,
             flags,
+            &mut bytes,
+        )
+    }.into_result()?;
+
+    Ok(bytes as _)
+}
+
+pub fn write_memory(
+    target: CopyAddress,
+    buffer: &mut [u8],
+) -> Result<usize, Error> {
+    let mut copy_addr: MM_COPY_ADDRESS = unsafe { core::mem::zeroed() };
+    let mut bytes = 0;
+
+    let target = match target {
+        CopyAddress::Virtual(addr) => addr,
+        CopyAddress::Physical(addr) => get_virtual_for_physical(addr),
+    };
+
+    copy_addr.__bindgen_anon_1.VirtualAddress = buffer.as_ptr() as _;
+
+    unsafe {
+        MmCopyMemory(
+            target as _,
+            copy_addr,
+            buffer.len() as _,
+            MM_COPY_MEMORY_VIRTUAL,
             &mut bytes,
         )
     }.into_result()?;
