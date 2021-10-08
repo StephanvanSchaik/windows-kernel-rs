@@ -12,20 +12,20 @@ const IOCTL_WRITE_VALUE: u32 = 0x802;
 
 impl DeviceOperations for MyDevice {
     fn ioctl(&mut self, _device: &Device, request: &IoControlRequest) -> Result<(), Error> {
-        match request.control_code() {
-            ControlCode(DeviceType::Unknown, _, IOCTL_PRINT_VALUE, _) => {
+        match request.function() {
+            (_, IOCTL_PRINT_VALUE) => {
                 println!("value: {}", self.value);
 
                 request.complete(Ok(0));
             }
-            ControlCode(DeviceType::Unknown, RequiredAccess::READ_DATA, IOCTL_READ_VALUE, TransferMethod::Buffered) => {
+            (RequiredAccess::READ_DATA, IOCTL_READ_VALUE) => {
                 let mut user_ptr = request.user_ptr();
 
                 user_ptr.write(&self.value)?;
 
                 request.complete(Ok(core::mem::size_of::<u32>() as u32))
             }
-            ControlCode(DeviceType::Unknown, RequiredAccess::WRITE_DATA, IOCTL_WRITE_VALUE, TransferMethod::Buffered) => {
+            (RequiredAccess::WRITE_DATA, IOCTL_WRITE_VALUE) => {
                 let user_ptr = request.user_ptr();
 
                 self.value = user_ptr.read()?;
