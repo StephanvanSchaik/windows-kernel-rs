@@ -32,22 +32,35 @@ where
 }
 
 pub fn run_on_each_cpu<F>(
-    f: F,
+    f: &mut F,
+) -> Result<(), Error>
+where
+    F: FnMut() -> Result<(), Error>,
+{
+    for cpu_num in 0..get_cpu_count() {
+        run_on_cpu(cpu_num, f)?;
+    }
+
+    Ok(())
+}
+ 
+pub fn run_on_each_cpu_parallel<F>(
+    f: &F,
 )
 where
     F: Fn(),
 {
     unsafe {
-        KeIpiGenericCall(Some(broadcast_callback::<F>), &f as *const _ as ULONG_PTR);
+        KeIpiGenericCall(Some(broadcast_callback::<F>), f as *const _ as ULONG_PTR);
     }
 }
 
 pub fn run_on_cpu<F>(
     cpu_num: u32,
-    mut f: F,
+    f: &mut F,
 ) -> Result<(), Error>
 where
-    F: FnMut(),
+    F: FnMut() -> Result<(), Error>,
 {
     let mut processor_num = PROCESSOR_NUMBER {
         Group: 0,
@@ -79,11 +92,11 @@ where
         KeSetSystemGroupAffinityThread(&mut affinity, &mut previous);
     }
 
-    f();
+    let result = f();
 
     unsafe {
         KeRevertToUserGroupAffinityThread(&mut previous);
     }
 
-    Ok(())
+    result
 }
