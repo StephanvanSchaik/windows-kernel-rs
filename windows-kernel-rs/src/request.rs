@@ -97,22 +97,24 @@ impl ReadRequest {
         let stack_location = self.stack_location();
         let irp = self.irp();
 
-        if !irp.MdlAddress.is_null() {
+        let (ptr, size) = if !irp.MdlAddress.is_null() {
             let ptr = unsafe {
                 MmGetSystemAddressForMdlSafe(irp.MdlAddress, MM_PAGE_PRIORITY::HighPagePriority as _)
             };
 
             let size = unsafe { MmGetMdlByteCount(irp.MdlAddress) } as usize;
 
-            unsafe { UserPtr::new(ptr, 0, size) }
+            (ptr, size)
         } else if !unsafe { irp.AssociatedIrp.SystemBuffer }.is_null() { 
             let ptr = unsafe { irp.AssociatedIrp.SystemBuffer };
             let size = unsafe { stack_location.Parameters.Read }.Length as usize;
 
-            unsafe { UserPtr::new(ptr, 0, size) }
+            (ptr, size)
         } else {
-            unsafe { UserPtr::new(core::ptr::null_mut(), 0, 0) }
-        }
+            (core::ptr::null_mut(), 0)
+        };
+
+        unsafe { UserPtr::new_buffered(ptr, 0, size) }
     }
 
     pub fn offset(&self) -> i64 {
@@ -146,22 +148,24 @@ impl WriteRequest {
         let stack_location = self.stack_location();
         let irp = self.irp();
 
-        if !irp.MdlAddress.is_null() {
+        let (ptr, size) = if !irp.MdlAddress.is_null() {
             let ptr = unsafe {
                 MmGetSystemAddressForMdlSafe(irp.MdlAddress, MM_PAGE_PRIORITY::HighPagePriority as _)
             };
 
             let size = unsafe { MmGetMdlByteCount(irp.MdlAddress) } as usize;
 
-            unsafe { UserPtr::new(ptr, size, 0) }
+            (ptr, size)
         } else if !unsafe {irp.AssociatedIrp.SystemBuffer }.is_null() {             
             let ptr = unsafe { irp.AssociatedIrp.SystemBuffer };
             let size = unsafe { stack_location.Parameters.Write }.Length as usize;
 
-            unsafe { UserPtr::new(ptr, size, 0) }
+            (ptr, size)
         } else {
-            unsafe { UserPtr::new(core::ptr::null_mut(), 0, 0) }
-        }
+            (core::ptr::null_mut(), 0)
+        };
+
+        unsafe { UserPtr::new_buffered(ptr, size, 0) }
     }
 
     pub fn offset(&self) -> i64 {
@@ -190,12 +194,6 @@ impl Deref for IoControlRequest {
     }
 }
 
-pub enum IoControlBuffers {
-    Buffered(UserPtr),
-    Direct(UserPtr, UserPtr),
-    Neither,
-}
-
 impl IoControlRequest {
     pub fn control_code(&self) -> ControlCode {
         let stack_location = self.stack_location();
@@ -205,7 +203,7 @@ impl IoControlRequest {
         }
     }
 
-    pub fn user_ptr(&self) -> IoControlBuffers { 
+    pub fn user_ptr(&self) -> UserPtr {
         let stack_location = self.stack_location();
         let irp = self.irp();
 
@@ -225,24 +223,14 @@ impl IoControlRequest {
         } as usize;
 
         match self.control_code().transfer_method() {
-            TransferMethod::Buffered => {
-                IoControlBuffers::Buffered(
-                    unsafe { UserPtr::new(system_buffer, input_size, output_size) },
-                )
-            }
-            TransferMethod::InputDirect => {
-                IoControlBuffers::Direct(
-                    unsafe { UserPtr::new(mdl_address, output_size, 0 ) },
-                    unsafe { UserPtr::new(system_buffer, 0, input_size) },
-                )
-            }
-            TransferMethod::OutputDirect => {
-                IoControlBuffers::Direct(
-                    unsafe { UserPtr::new(system_buffer, input_size, 0) },
-                    unsafe { UserPtr::new(mdl_address, 0, output_size) },
-                )
-            }
-            TransferMethod::Neither => IoControlBuffers::Neither,
+            TransferMethod::Buffered =>
+                unsafe { UserPtr::new_buffered(system_buffer, input_size, output_size) },
+            TransferMethod::InputDirect =>
+                unsafe { UserPtr::new_direct(mdl_address, system_buffer, output_size, input_size) },
+            TransferMethod::OutputDirect =>
+                unsafe { UserPtr::new_direct(system_buffer, mdl_address, input_size, output_size) },
+            TransferMethod::Neither =>
+                unsafe { UserPtr::new_neither() },
         }
     }
 }

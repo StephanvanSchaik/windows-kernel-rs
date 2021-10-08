@@ -21,7 +21,7 @@ pub use crate::device::{Access, Device, DeviceDoFlags, DeviceFlags, DeviceOperat
 pub use crate::driver::Driver;
 pub use crate::error::Error;
 pub use crate::ioctl::{ControlCode, RequiredAccess, TransferMethod};
-pub use crate::request::{IoRequest, IoControlBuffers, IoControlRequest, ReadRequest, WriteRequest};
+pub use crate::request::{IoRequest, IoControlRequest, ReadRequest, WriteRequest};
 pub use crate::symbolic_link::SymbolicLink;
 pub use crate::user_ptr::UserPtr;
 
