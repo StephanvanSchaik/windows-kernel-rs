@@ -1,7 +1,6 @@
-use crate::error::Error;
+use crate::error::{Error, IntoResult};
 use crate::string::create_unicode_string;
 use widestring::U16CString;
-use windows_kernel_sys::base::STATUS_SUCCESS;
 use windows_kernel_sys::ntoskrnl::{IoCreateSymbolicLink, IoDeleteSymbolicLink};
 
 pub struct SymbolicLink {
@@ -18,13 +17,9 @@ impl SymbolicLink {
         let target = U16CString::from_str(target).unwrap();
         let mut target_ptr = create_unicode_string(target.as_slice());
 
-        let status = unsafe {
+        unsafe {
             IoCreateSymbolicLink(&mut name_ptr, &mut target_ptr)
-        };
-            
-        if status != STATUS_SUCCESS {
-            return Err(Error::from_kernel_errno(status));
-        }
+        }.into_result()?;
 
         Ok(Self {
             name,

@@ -1,5 +1,5 @@
-use crate::error::Error;
-use windows_kernel_sys::base::{KAPC_STATE, PEPROCESS, STATUS_SUCCESS};
+use crate::error::{Error, IntoResult};
+use windows_kernel_sys::base::{KAPC_STATE, PEPROCESS};
 use windows_kernel_sys::ntoskrnl::{KeStackAttachProcess, KeUnstackDetachProcess};
 use windows_kernel_sys::ntoskrnl::{ObDereferenceObject, ObReferenceObject};
 use windows_kernel_sys::ntoskrnl::{PsGetCurrentProcess, PsLookupProcessByProcessId};
@@ -23,16 +23,13 @@ impl Process {
     pub fn by_id(process_id: u64) -> Result<Self, Error> {
         let mut process = core::ptr::null_mut();
 
-        let status = unsafe {
+        unsafe {
             PsLookupProcessByProcessId(process_id as _, &mut process)
-        };
+        }.into_result()?;
 
-        match status {
-            STATUS_SUCCESS => Ok(Self {
-                process,
-            }),
-            status => Err(Error::from_kernel_errno(status)),
-        }
+        Ok(Self {
+            process,
+        })
     }
 
     pub fn attach(&self) -> ProcessAttachment {

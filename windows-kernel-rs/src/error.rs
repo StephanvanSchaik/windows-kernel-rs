@@ -1,5 +1,6 @@
 use windows_kernel_sys::base::NTSTATUS;
 use windows_kernel_sys::base::{
+    STATUS_SUCCESS,
     STATUS_UNSUCCESSFUL,
     STATUS_NOT_IMPLEMENTED,
     STATUS_ACCESS_VIOLATION,
@@ -24,5 +25,18 @@ impl Error {
 
     pub fn to_kernel_errno(&self) -> NTSTATUS {
         self.0
+    }
+}
+
+pub trait IntoResult {
+    fn into_result(self) -> Result<(), Error>;
+}
+
+impl IntoResult for NTSTATUS {
+    fn into_result(self) -> Result<(), Error> {
+        match self {
+            STATUS_SUCCESS => Ok(()),
+            status => Err(Error::from_kernel_errno(status)),
+        }
     }
 }

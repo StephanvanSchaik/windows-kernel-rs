@@ -1,6 +1,5 @@
-use crate::error::Error;
+use crate::error::{Error, IntoResult};
 use windows_kernel_sys::base::{ALL_PROCESSOR_GROUPS, GROUP_AFFINITY, PROCESSOR_NUMBER, ULONG_PTR};
-use windows_kernel_sys::base::STATUS_SUCCESS;
 use windows_kernel_sys::ntoskrnl::{
     KeIpiGenericCall, KeGetCurrentProcessorNumberEx, KeGetProcessorNumberFromIndex,
     KeQueryActiveProcessorCountEx, KeRevertToUserGroupAffinityThread,
@@ -68,13 +67,9 @@ where
         Reserved: 0,
     };
 
-    let status = unsafe {
+    unsafe {
         KeGetProcessorNumberFromIndex(cpu_num, &mut processor_num)
-    };
-
-    if status != STATUS_SUCCESS {
-        return Err(Error::from_kernel_errno(status));
-    }
+    }.into_result()?;
 
     let mut previous = GROUP_AFFINITY {
         Mask: 0,

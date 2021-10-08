@@ -1,9 +1,9 @@
 use alloc::boxed::Box;
 use crate::device::{Access, Device, DeviceExtension, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceOperationsVtable, DeviceType};
-use crate::error::Error;
+use crate::error::{Error, IntoResult};
 use crate::string::create_unicode_string;
 use widestring::U16CString;
-use windows_kernel_sys::base::{DRIVER_OBJECT, STATUS_SUCCESS};
+use windows_kernel_sys::base::DRIVER_OBJECT;
 use windows_kernel_sys::ntoskrnl::{IoCreateDevice};
 
 pub struct Driver {
@@ -47,7 +47,7 @@ impl Driver {
         // Create the device.
         let mut device = core::ptr::null_mut();
 
-        let status = unsafe {
+        unsafe {
             IoCreateDevice(
                 self.raw,
                 core::mem::size_of::<DeviceExtension>() as u32,
@@ -57,11 +57,7 @@ impl Driver {
                 access.is_exclusive() as _,
                 &mut device,
             )
-        };
-
-        if status != STATUS_SUCCESS {
-            return Err(Error::from_kernel_errno(status));
-        }
+        }.into_result()?;
 
         unsafe {
             (*device).Flags |= device_do_flags.bits();
