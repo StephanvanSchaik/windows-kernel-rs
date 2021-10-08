@@ -272,6 +272,10 @@ impl Device {
         }
     }
 
+    pub(crate) fn device_type(&self) -> DeviceType {
+        self.extension().device_type
+    }
+
     pub(crate) fn vtable(&self) -> &device_operations {
         unsafe {
             &*(self.extension().vtable as *const _)
@@ -377,13 +381,16 @@ extern "C" fn dispatch_callback<T: DeviceOperations>(
                 inner: request,
             };
 
-            let status = data.ioctl(&device, &control_request);
+            let status = if device.device_type() == control_request.control_code().device_type() {
+                data.ioctl(&device, &control_request)
+            } else {
+                Err(Error::INVALID_PARAMETER)
+            };
 
             request = control_request.inner;
             status
         }
         _ => {
-            request.complete(Err(Error::INVALID_PARAMETER));
             Err(Error::INVALID_PARAMETER)
         }
     };
@@ -424,6 +431,7 @@ impl<T: DeviceOperations> DeviceOperationsVtable<T> {
 pub struct DeviceExtension {
     pub(crate) vtable: *const device_operations,
     pub(crate) data: *mut cty::c_void,
+    pub(crate) device_type: DeviceType,
 }
 
 pub extern "C" fn dispatch_device(

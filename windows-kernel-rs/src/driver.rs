@@ -71,6 +71,7 @@ impl Driver {
 
         // Store the boxed data and vtable.
         let extension = device.extension_mut();
+        extension.device_type = device_type;
         extension.vtable = &DeviceOperationsVtable::<T>::VTABLE;
         extension.data = Box::into_raw(data) as *mut cty::c_void;
 
