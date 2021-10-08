@@ -38,7 +38,7 @@ PVOID _MmGetSystemAddressForMdlSafe(PMDL mdl, ULONG priority) {
 	return MmGetSystemAddressForMdlSafe(mdl, priority);
 }
 
-void _ObDerefereneObject(PVOID p) {
+void _ObDereferenceObject(PVOID p) {
 	ObDereferenceObject(p);
 }
 
