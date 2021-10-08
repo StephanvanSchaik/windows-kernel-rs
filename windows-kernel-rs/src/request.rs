@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use core::ops::Deref;
 use crate::error::Error;
-use crate::ioctl::{ControlCode, TransferMethod};
+use crate::ioctl::{ControlCode, RequiredAccess, TransferMethod};
 use crate::user_ptr::UserPtr;
 use windows_kernel_sys::base::{IO_NO_INCREMENT, IO_STACK_LOCATION, IRP, STATUS_SUCCESS};
 use windows_kernel_sys::base::_MM_PAGE_PRIORITY as MM_PAGE_PRIORITY;
@@ -201,6 +201,12 @@ impl IoControlRequest {
         unsafe {
             stack_location.Parameters.DeviceIoControl.IoControlCode.into()
         }
+    }
+
+    pub fn function(&self) -> (RequiredAccess, u32) {
+        let code = self.control_code();
+
+        (code.required_access(), code.number())
     }
 
     pub fn user_ptr(&self) -> UserPtr {
