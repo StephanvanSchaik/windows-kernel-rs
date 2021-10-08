@@ -12,6 +12,7 @@ pub mod error;
 pub mod intrin;
 pub mod io;
 pub mod ioctl;
+pub mod process;
 pub mod request;
 pub mod string;
 pub mod symbolic_link;
