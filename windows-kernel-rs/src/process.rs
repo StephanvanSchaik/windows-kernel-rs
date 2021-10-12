@@ -32,6 +32,14 @@ impl Process {
         })
     }
 
+    pub fn id(&self) -> usize {
+        let handle = unsafe {
+            windows_kernel_sys::ntoskrnl::PsGetProcessId(self.process)
+        };
+
+        handle as _
+    }
+
     pub fn attach(&self) -> ProcessAttachment {
         unsafe {
             ProcessAttachment::attach(self.process)
