@@ -32,6 +32,16 @@ impl MemoryDescriptorList {
         })
     }
 
+    pub fn build_for_non_paged_pool(
+        &mut self,
+    ) {
+        use windows_kernel_sys::ntoskrnl::MmBuildMdlForNonPagedPool;
+
+        unsafe {
+            MmBuildMdlForNonPagedPool(self.raw);
+        }
+    }
+
     pub fn map_locked_pages(
         self,
         access: AccessMode,
