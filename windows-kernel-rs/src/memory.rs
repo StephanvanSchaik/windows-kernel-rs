@@ -97,6 +97,14 @@ impl IoMapping {
             size,
         })
     }
+
+    pub fn ptr(&self) -> &mut core::ffi::c_void {
+        self.ptr
+    }
+
+    pub fn size(&self) -> usize {
+        self.size
+    }
 }
 
 impl Drop for IoMapping {
