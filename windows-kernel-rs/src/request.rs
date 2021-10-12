@@ -131,6 +131,12 @@ impl ReadRequest {
     }
 }
 
+impl Into<IoRequest> for ReadRequest {
+    fn into(self) -> IoRequest {
+        self.inner
+    }
+}
+
 pub struct WriteRequest {
     pub(crate) inner: IoRequest,
 }
@@ -179,6 +185,12 @@ impl WriteRequest {
         } else {
             0
         }
+    }
+}
+
+impl Into<IoRequest> for WriteRequest {
+    fn into(self) -> IoRequest {
+        self.inner
     }
 }
 
@@ -238,5 +250,11 @@ impl IoControlRequest {
             TransferMethod::Neither =>
                 unsafe { UserPtr::new_neither() },
         }
+    }
+}
+
+impl Into<IoRequest> for IoControlRequest {
+    fn into(self) -> IoRequest {
+        self.inner
     }
 }
