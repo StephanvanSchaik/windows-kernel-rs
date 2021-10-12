@@ -98,7 +98,7 @@ impl IoMapping {
         })
     }
 
-    pub fn ptr(&self) -> &mut core::ffi::c_void {
+    pub fn ptr(&self) -> *mut core::ffi::c_void {
         self.ptr
     }
 
