@@ -60,7 +60,7 @@ impl IoRequest {
         self.stack_location().MajorFunction
     }
 
-    pub fn complete(&self, value: Result<u32, Error>) {
+    pub(crate) fn complete(&self, value: Result<u32, Error>) {
         let irp = self.irp_mut();
         
         match value {

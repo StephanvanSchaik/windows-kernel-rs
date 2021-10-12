@@ -311,35 +311,35 @@ impl Drop for Device {
     }
 }
 
+pub struct RequestError(pub Error, pub IoRequest);
+
+pub enum Completion {
+    Complete(u32, IoRequest),
+}
+
 pub trait DeviceOperations: Sync + Sized {
-    fn create(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
-        request.complete(Ok(0));
-        Ok(())
+    fn create(&mut self, _device: &Device, request: IoRequest) -> Result<Completion, RequestError> {
+        Ok(Completion::Complete(0, request))
     }
 
-    fn close(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
-        request.complete(Ok(0));
-        Ok(())
+    fn close(&mut self, _device: &Device, request: IoRequest) -> Result<Completion, RequestError> {
+        Ok(Completion::Complete(0, request))
     }
 
-    fn cleanup(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
-        request.complete(Ok(0));
-        Ok(())
+    fn cleanup(&mut self, _device: &Device, request: IoRequest) -> Result<Completion, RequestError> {
+        Ok(Completion::Complete(0, request))
     }
 
-    fn read(&mut self, _device: &Device, request: &ReadRequest) -> Result<(), Error> {
-        request.complete(Ok(0));
-        Ok(())
+    fn read(&mut self, _device: &Device, request: ReadRequest) -> Result<Completion, RequestError> {
+        Ok(Completion::Complete(0, request.into()))
     }
 
-    fn write(&mut self, _device: &Device, request: &WriteRequest) -> Result<(), Error> {
-        request.complete(Ok(0));
-        Ok(())
+    fn write(&mut self, _device: &Device, request: WriteRequest) -> Result<Completion, RequestError> {
+        Ok(Completion::Complete(0, request.into()))
     }
 
-    fn ioctl(&mut self, _device: &Device, request: &IoControlRequest) -> Result<(), Error> {
-        request.complete(Ok(0));
-        Ok(())
+    fn ioctl(&mut self, _device: &Device, request: IoControlRequest) -> Result<Completion, RequestError> {
+        Ok(Completion::Complete(0, request.into()))
     }
 }
 
@@ -350,56 +350,50 @@ extern "C" fn dispatch_callback<T: DeviceOperations>(
 ) -> NTSTATUS {
     let device = unsafe { Device::from_raw(device) };
     let data: &mut T = device.data_mut();
-    let mut request = unsafe { IoRequest::from_raw(irp) };
+    let request = unsafe { IoRequest::from_raw(irp) };
 
-    let status = match major as _ {
-        IRP_MJ_CREATE => data.create(&device, &request),
-        IRP_MJ_CLOSE => data.close(&device, &request),
-        IRP_MJ_CLEANUP => data.cleanup(&device, &request),
+    let result = match major as _ {
+        IRP_MJ_CREATE => data.create(&device, request),
+        IRP_MJ_CLOSE => data.close(&device, request),
+        IRP_MJ_CLEANUP => data.cleanup(&device, request),
         IRP_MJ_READ => {
             let read_request = ReadRequest {
                 inner: request,
             };
 
-            let status = data.read(&device, &read_request);
-
-            request = read_request.inner;
-            status
+            data.read(&device, read_request)
         }
         IRP_MJ_WRITE => {
             let write_request = WriteRequest {
                 inner: request,
             };
 
-            let status = data.write(&device, &write_request);
-
-            request = write_request.inner;
-            status
+            data.write(&device, write_request)
         }
         IRP_MJ_DEVICE_CONTROL => {
             let control_request = IoControlRequest {
                 inner: request,
             };
 
-            let status = if device.device_type() == control_request.control_code().device_type() {
-                data.ioctl(&device, &control_request)
+            if device.device_type() == control_request.control_code().device_type() {
+                data.ioctl(&device, control_request)
             } else {
-                Err(Error::INVALID_PARAMETER)
-            };
-
-            request = control_request.inner;
-            status
+                Err(RequestError(Error::INVALID_PARAMETER, control_request.into()))
+            }
         }
         _ => {
-            Err(Error::INVALID_PARAMETER)
+            Err(RequestError(Error::INVALID_PARAMETER, request))
         }
     };
 
     device.into_raw();
 
-    match status {
-        Ok(()) => STATUS_SUCCESS,
-        Err(e) => {
+    match result {
+        Ok(Completion::Complete(size, request)) => {
+            request.complete(Ok(size));
+            STATUS_SUCCESS
+        }
+        Err(RequestError(e, request)) => {
             let status = e.to_kernel_errno();
             request.complete(Err(e));
             status

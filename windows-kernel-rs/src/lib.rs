@@ -21,7 +21,7 @@ pub mod symbolic_link;
 pub mod user_ptr;
 
 pub use crate::affinity::{get_cpu_count, get_current_cpu_num, run_on_cpu, run_on_each_cpu};
-pub use crate::device::{Access, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, dispatch_device};
+pub use crate::device::{Access, Completion, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, dispatch_device, RequestError};
 pub use crate::driver::Driver;
 pub use crate::error::Error;
 pub use crate::ioctl::{ControlCode, RequiredAccess, TransferMethod};
