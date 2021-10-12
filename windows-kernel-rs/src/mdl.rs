@@ -12,6 +12,9 @@ pub struct MemoryDescriptorList {
     raw: *mut windows_kernel_sys::base::MDL,
 }
 
+unsafe impl Send for MemoryDescriptorList {}
+unsafe impl Sync for MemoryDescriptorList {}
+
 impl MemoryDescriptorList {
     pub fn new(
         addr: *mut core::ffi::c_void,
@@ -82,6 +85,9 @@ pub struct LockedMapping {
     raw: *mut windows_kernel_sys::base::MDL,
     ptr: *mut core::ffi::c_void,
 }
+
+unsafe impl Send for LockedMapping {}
+unsafe impl Sync for LockedMapping {}
 
 impl LockedMapping {
     pub fn ptr(&self) -> *mut core::ffi::c_void {

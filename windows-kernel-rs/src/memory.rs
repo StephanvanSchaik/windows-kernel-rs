@@ -54,6 +54,9 @@ pub enum CopyAddress {
     Physical(PhysicalAddress),
 }
 
+unsafe impl Send for CopyAddress {}
+unsafe impl Sync for CopyAddress {}
+
 impl Into<(u32, MM_COPY_ADDRESS)> for CopyAddress {
     fn into(self) -> (u32, MM_COPY_ADDRESS) {
         let mut copy_addr: MM_COPY_ADDRESS = unsafe {
@@ -79,6 +82,9 @@ pub struct IoMapping {
     ptr: *mut core::ffi::c_void,
     size: usize,
 }
+
+unsafe impl Send for IoMapping {}
+unsafe impl Sync for IoMapping {}
 
 impl IoMapping {
     pub fn new(addr: PhysicalAddress, size: usize, caching: MemoryCaching) -> Result<Self, Error> {
