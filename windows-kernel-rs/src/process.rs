@@ -4,6 +4,8 @@ use windows_kernel_sys::ntoskrnl::{KeStackAttachProcess, KeUnstackDetachProcess}
 use windows_kernel_sys::ntoskrnl::{ObDereferenceObject, ObReferenceObject};
 use windows_kernel_sys::ntoskrnl::{PsGetCurrentProcess, PsLookupProcessByProcessId};
 
+pub type ProcessId = usize;
+
 #[derive(Clone, Debug)]
 pub struct Process {
     pub process: PEPROCESS,
@@ -20,7 +22,7 @@ impl Process {
         }
     }
 
-    pub fn by_id(process_id: u64) -> Result<Self, Error> {
+    pub fn by_id(process_id: ProcessId) -> Result<Self, Error> {
         let mut process = core::ptr::null_mut();
 
         unsafe {
@@ -32,7 +34,7 @@ impl Process {
         })
     }
 
-    pub fn id(&self) -> usize {
+    pub fn id(&self) -> ProcessId {
         let handle = unsafe {
             windows_kernel_sys::ntoskrnl::PsGetProcessId(self.process)
         };
