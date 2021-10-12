@@ -10,14 +10,14 @@ pub struct Process {
 }
 
 impl Process {
-    pub fn current() -> Result<Self, Error> {
+    pub fn current() -> Self {
         let process = unsafe {
             PsGetCurrentProcess()
         };
 
-        Ok(Self {
+        Self {
             process,
-        })
+        }
     }
 
     pub fn by_id(process_id: u64) -> Result<Self, Error> {
