@@ -70,7 +70,7 @@ impl IoRequest {
             }
             Err(error) => {
                 irp.IoStatus.Information = 0;
-                irp.IoStatus.__bindgen_anon_1.Status = error.to_kernel_errno();
+                irp.IoStatus.__bindgen_anon_1.Status = error.to_ntstatus();
             }
         }
 

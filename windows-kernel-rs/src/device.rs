@@ -394,7 +394,7 @@ extern "C" fn dispatch_callback<T: DeviceOperations>(
             STATUS_SUCCESS
         }
         Err(RequestError(e, request)) => {
-            let status = e.to_kernel_errno();
+            let status = e.to_ntstatus();
             request.complete(Err(e));
             status
         }
