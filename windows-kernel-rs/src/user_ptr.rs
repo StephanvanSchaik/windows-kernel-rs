@@ -94,7 +94,7 @@ impl UserPtr {
         }
     }
 
-    pub fn read<T: Default>(&self) -> Result<T, Error> {
+    pub fn read<T: Copy + Default>(&self) -> Result<T, Error> {
         let (ptr, size) = match self {
             Self::Buffered { ptr, read_size, .. } => (*ptr as _, *read_size),
             Self::Direct { read_ptr, read_size, .. } => (*read_ptr, *read_size),
@@ -115,14 +115,14 @@ impl UserPtr {
             core::ptr::copy_nonoverlapping(
                 ptr as _,
                 &mut obj,
-                core::mem::size_of::<T>(),
+                1,
             );
         }
 
         Ok(obj)
     }
 
-    pub fn write<T>(&mut self, obj: &T) -> Result<(), Error> {
+    pub fn write<T: Copy>(&mut self, obj: &T) -> Result<(), Error> {
         let (ptr, size) = match self {
             Self::Buffered { ptr, write_size, .. } => (*ptr, *write_size),
             Self::Direct { write_ptr, write_size, .. } => (*write_ptr, *write_size),
@@ -141,7 +141,7 @@ impl UserPtr {
             core::ptr::copy_nonoverlapping(
                 obj,
                 ptr as _,
-                core::mem::size_of::<T>(),
+                1,
             );
         }
 
