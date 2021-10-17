@@ -48,8 +48,14 @@ NTSTATUS write_msr_safe(
 	__try {
 		__writemsr(Register, Value);
 	} __except(EXCEPTION_EXECUTE_HANDLER) {
-		return STATUS_ACCESS_VIOLATION;
+		return GetExceptionCode();
 	}
 
 	return STATUS_SUCCESS;
+}
+
+void invlpg(
+	void *Address
+) {
+	__invlpg(Address);
 }

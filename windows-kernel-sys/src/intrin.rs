@@ -12,4 +12,5 @@ extern "C" {
     pub fn read_msr_safe(register: u32, value: &mut u64) -> NTSTATUS;
     pub fn write_msr(register: u32, value: u64);
     pub fn write_msr_safe(register: u32, value: u64) -> NTSTATUS;
+    pub fn invlpg(value: usize);
 }
