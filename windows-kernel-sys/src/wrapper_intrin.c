@@ -22,13 +22,13 @@ NTSTATUS read_msr_safe(
 	unsigned __int64 *Value
 ) {
 	if (!Value) {
-		return STATUS_ACCESS_VIOLATION;
+		return STATUS_INVALID_PARAMETER;
 	}
 
 	__try {
 		*Value = __readmsr(Register);
 	} __except(EXCEPTION_EXECUTE_HANDLER) {
-		return STATUS_ACCESS_VIOLATION;
+		return GetExceptionCode();
 	}
 
 	return STATUS_SUCCESS;
