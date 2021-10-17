@@ -32,8 +32,11 @@ pub use crate::user_ptr::UserPtr;
 pub use widestring::U16CString;
 pub use windows_kernel_sys::base::{DRIVER_OBJECT, IRP_MJ_MAXIMUM_FUNCTION, NTSTATUS, STATUS_SUCCESS, UNICODE_STRING};
 
+#[cfg(feature = "alloc")]
 #[global_allocator]
-static ALLOCATOR: allocator::KernelAllocator = allocator::KernelAllocator;
+static ALLOCATOR: allocator::KernelAllocator = allocator::KernelAllocator::new(
+        u32::from_ne_bytes(*b"rust")
+    );
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
