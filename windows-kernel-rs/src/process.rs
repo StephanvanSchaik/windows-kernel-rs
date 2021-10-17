@@ -1,8 +1,10 @@
+use bitflags::bitflags;
 use crate::error::{Error, IntoResult};
-use windows_kernel_sys::base::{KAPC_STATE, PEPROCESS};
+use windows_kernel_sys::base::{CLIENT_ID, HANDLE, KAPC_STATE, OBJECT_ATTRIBUTES, PEPROCESS};
 use windows_kernel_sys::ntoskrnl::{KeStackAttachProcess, KeUnstackDetachProcess};
 use windows_kernel_sys::ntoskrnl::{ObDereferenceObject, ObReferenceObject};
 use windows_kernel_sys::ntoskrnl::{PsGetCurrentProcess, PsLookupProcessByProcessId};
+use windows_kernel_sys::ntoskrnl::{ZwClose, ZwOpenProcess};
 
 pub type ProcessId = usize;
 
@@ -12,10 +14,18 @@ pub struct Process {
 }
 
 impl Process {
+    pub fn as_ptr(&self) -> PEPROCESS {
+        self.process
+    }
+
     pub fn current() -> Self {
         let process = unsafe {
             PsGetCurrentProcess()
         };
+
+        unsafe {
+            ObReferenceObject(process as _);
+        }
 
         Self {
             process,
@@ -81,6 +91,46 @@ impl Drop for ProcessAttachment {
         unsafe {
             KeUnstackDetachProcess(&mut self.state);
             ObDereferenceObject(self.process as _);
+        }
+    }
+}
+
+bitflags! {
+    pub struct ProcessAccess: u32 {
+        const ALL_ACCESS = windows_kernel_sys::base::PROCESS_ALL_ACCESS;
+    }
+}
+
+pub struct ZwProcess {
+    pub(crate) handle: HANDLE,
+}
+
+impl ZwProcess {
+    pub fn open(id: ProcessId, access: ProcessAccess) -> Result<Self, Error> {
+        let mut attrs: OBJECT_ATTRIBUTES = unsafe { core::mem::zeroed() };
+        attrs.Length = core::mem::size_of::<OBJECT_ATTRIBUTES>() as u32;
+
+        let mut client_id = CLIENT_ID {
+            UniqueProcess: id as _,
+            UniqueThread: core::ptr::null_mut(),
+        };
+
+        let mut handle = core::ptr::null_mut();
+
+        unsafe {
+            ZwOpenProcess(&mut handle, access.bits(), &mut attrs, &mut client_id)
+        }.into_result()?;
+
+        Ok(Self {
+            handle,
+        })
+    }
+}
+
+impl Drop for ZwProcess {
+    fn drop(&mut self) {
+        unsafe {
+            ZwClose(self.handle);
         }
     }
 }
