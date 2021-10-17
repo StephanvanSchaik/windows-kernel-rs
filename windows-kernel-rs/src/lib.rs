@@ -16,6 +16,7 @@ pub mod mdl;
 pub mod memory;
 pub mod process;
 pub mod request;
+pub mod section;
 pub mod string;
 pub mod symbolic_link;
 pub mod user_ptr;
