@@ -55,3 +55,37 @@ pub fn get_km_dir(dir_type: DirectoryType) -> Result<PathBuf, Error> {
     // Finally append km to the path to get the path to the kernel mode libraries.
     Ok(dir.join("km"))
 }
+
+pub fn build() -> Result<(), Error> {
+    // Get the path to the kernel libraries.
+    let dir = get_km_dir(DirectoryType::Library).unwrap();
+
+    // Append the architecture based on our target.
+    let target = std::env::var("TARGET").unwrap();
+
+    let arch = if target.contains("x86_64") {
+        "x64"
+    } else if target.contains("i686") {
+        "x86"
+    } else {
+        panic!("The target {} is currently not supported.", target);
+    };
+
+    let dir = dir.join(arch);
+
+    // Specify the link path.
+    println!("cargo:rustc-link-search=native={}", dir.to_str().unwrap());
+
+    // Ensure the right linker flags are passed for building a driver.
+    println!("cargo:rustc-link-arg=/NODEFAULTLIB");
+    println!("cargo:rustc-link-arg=/SUBSYSTEM:NATIVE");
+    println!("cargo:rustc-link-arg=/DRIVER");
+    println!("cargo:rustc-link-arg=/DYNAMICBASE");
+    println!("cargo:rustc-link-arg=/MANIFEST:NO");
+    println!("cargo:rustc-link-arg=/ENTRY:driver_entry");
+    println!("cargo:rustc-link-arg=/MERGE:.edata=.rdata");
+    println!("cargo:rustc-link-arg=/MERGE:.rustc=.data");
+    println!("cargo:rustc-link-arg=/INTEGRITYCHECK");
+
+    Ok(())
+}
