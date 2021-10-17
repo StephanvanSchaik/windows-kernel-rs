@@ -20,6 +20,7 @@ pub mod section;
 pub mod string;
 pub mod symbolic_link;
 pub mod user_ptr;
+pub mod version;
 
 pub use crate::affinity::{get_cpu_count, get_current_cpu_num, run_on_cpu, run_on_each_cpu};
 pub use crate::device::{Access, Completion, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, dispatch_device, RequestError};
