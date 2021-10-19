@@ -7,7 +7,7 @@ use core::alloc::{GlobalAlloc, Layout};
 use crate::version::VersionInfo;
 use lazy_static::lazy_static;
 use windows_kernel_sys::base::_POOL_TYPE as POOL_TYPE;
-use windows_kernel_sys::ntoskrnl::{ExAllocatePoolWithTag, ExAllocatePool2, ExFreePool, ExFreePool2};
+use windows_kernel_sys::ntoskrnl::{ExAllocatePoolWithTag, ExAllocatePool2, ExFreePool};
 
 /// See issue #52191.
 #[alloc_error_handler]
@@ -71,17 +71,8 @@ unsafe impl GlobalAlloc for KernelAllocator {
         ptr as _
     }
 
-    /// Uses [`ExFreePool2`] on Microsoft Windows 10.0.19041 and later, and [`ExFreePool`] on older
-    /// versions of Microsoft Windows to free memory.
+    /// Uses [`ExFreePool`] to free allocated memory.
     unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
-        let use_ex_allocate_pool2 =
-            VERSION_INFO.major() > 10 ||
-            (VERSION_INFO.major() == 10 && VERSION_INFO.build_number() == 19041);
-
-        if use_ex_allocate_pool2 {
-            ExFreePool2(ptr as _, self.tag, core::ptr::null_mut(), 0)
-        } else {
-            ExFreePool(ptr as _)
-        }
+        ExFreePool(ptr as _)
     }
 }
