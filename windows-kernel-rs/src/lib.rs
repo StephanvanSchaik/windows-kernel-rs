@@ -90,7 +90,7 @@ macro_rules! kernel_module {
                     $crate::STATUS_SUCCESS
                 }
                 Err(e) => {
-                    e.to_kernel_errno()
+                    e.to_ntstatus()
                 }
             }
         }
