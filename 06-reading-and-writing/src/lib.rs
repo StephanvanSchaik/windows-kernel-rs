@@ -4,14 +4,17 @@ extern crate alloc;
 
 use alloc::vec;
 use alloc::vec::Vec;
-use windows_kernel_rs::{Access, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, kernel_module, KernelModule, SymbolicLink, ReadRequest, WriteRequest};
+use windows_kernel_rs::device::{
+    Completion, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, RequestError};
+use windows_kernel_rs::request::{ReadRequest, WriteRequest};
+use windows_kernel_rs::{Access, Driver, Error, kernel_module, KernelModule, SymbolicLink};
 
 struct MyDevice {
     data: Vec<u8>,
 }
 
 impl DeviceOperations for MyDevice {
-    fn read(&mut self, _device: &Device, request: &ReadRequest) -> Result<(), Error> {
+    fn read(&mut self, _device: &Device, request: ReadRequest) -> Result<Completion, RequestError> {
         let mut user_ptr = request.user_ptr();
         let slice = user_ptr.as_mut_slice();
 
@@ -20,16 +23,14 @@ impl DeviceOperations for MyDevice {
 
         slice[0..size].copy_from_slice(&self.data[offset..offset + size]);
 
-        request.complete(Ok(size as u32));
-
-        Ok(())
+        Ok(Completion::Complete(size as u32, request.into()))
     }
 
-    fn write(&mut self, _device: &Device, request: &WriteRequest) -> Result<(), Error> {
+    fn write(&mut self, _device: &Device, request: WriteRequest) -> Result<Completion, RequestError> {
         let user_ptr = request.user_ptr();
 
         if request.offset() > 0 {
-            return Err(Error::END_OF_FILE)?;
+            return Err(RequestError(Error::END_OF_FILE, request.into()))?;
         }
 
         let slice = user_ptr.as_slice();
@@ -37,9 +38,7 @@ impl DeviceOperations for MyDevice {
 
         self.data = slice[0..size].to_vec();
 
-        request.complete(Ok(size as u32));
-
-        Ok(())
+        Ok(Completion::Complete(size as u32, request.into()))
     }
 }
 
