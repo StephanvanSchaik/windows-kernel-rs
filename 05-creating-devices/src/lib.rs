@@ -1,32 +1,30 @@
 #![no_std]
 
-use windows_kernel_rs::{Access, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, Driver, Error, IoRequest, kernel_module, KernelModule, println, SymbolicLink};
+use windows_kernel_rs::device::{
+    Completion, Device, DeviceDoFlags, DeviceFlags, DeviceOperations, DeviceType, RequestError};
+use windows_kernel_rs::println;
+use windows_kernel_rs::request::{IoRequest};
+use windows_kernel_rs::{Access, Driver, Error, kernel_module, KernelModule, SymbolicLink};
 
 struct MyDevice;
 
 impl DeviceOperations for MyDevice {
-    fn create(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
+    fn create(&mut self, _device: &Device, request: IoRequest) -> Result<Completion, RequestError> {
         println!("userspace opened the device");
 
-        request.complete(Ok(0));
-
-        Ok(())
+        Ok(Completion::Complete(0, request))
     }
 
-    fn close(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
+    fn close(&mut self, _device: &Device, request: IoRequest) -> Result<Completion, RequestError> {
         println!("userspace closed the device");
 
-        request.complete(Ok(0));
-
-        Ok(())
+        Ok(Completion::Complete(0, request))
     }
 
-    fn cleanup(&mut self, _device: &Device, request: &IoRequest) -> Result<(), Error> {
+    fn cleanup(&mut self, _device: &Device, request: IoRequest) -> Result<Completion, RequestError> {
         println!("device is no longer in use by userspace");
 
-        request.complete(Ok(0));
-
-        Ok(())
+        Ok(Completion::Complete(0, request))
     }
 }
 
