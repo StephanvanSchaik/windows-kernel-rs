@@ -2,10 +2,10 @@
 VC_BUILD_DIR="C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat"
 
 [env.development]
-TARGET_PATH = "target/x86_64-pc-windows-msvc/debug"
+TARGET_PATH = "target/debug"
 
 [env.production]
-TARGET_PATH = "target/x86_64-pc-windows-msvc/release"
+TARGET_PATH = "target/release"
 BUILD_RELEASE = "--release"
 
 [tasks.clean-cert]
