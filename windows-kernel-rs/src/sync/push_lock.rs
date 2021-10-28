@@ -8,6 +8,8 @@ use windows_kernel_sys::ntoskrnl::{
     ExReleasePushLockShared,
     ExAcquirePushLockExclusive,
     ExReleasePushLockExclusive,
+    KeEnterCriticalRegion,
+    KeLeaveCriticalRegion,
 };
 
 /// A [`PushLock`] is an efficient implementation of a reader-writer lock that can be stored both
@@ -81,6 +83,10 @@ impl<T> PushLock<T> {
     #[inline]
     pub fn read(&mut self) -> Option<PushLockReadGuard<T>> {
         unsafe {
+            KeEnterCriticalRegion()
+        };
+
+        unsafe {
             ExAcquirePushLockShared(
                 &mut *self.lock,
             )
@@ -106,6 +112,10 @@ impl<T> PushLock<T> {
     /// The underlying function does not allow for recursion, which ensures correct behavior. 
     #[inline]
     pub fn write(&mut self) -> Option<PushLockWriteGuard<T>> {
+        unsafe {
+            KeEnterCriticalRegion()
+        };
+
         unsafe {
             ExAcquirePushLockExclusive(
                 &mut *self.lock,
@@ -137,6 +147,10 @@ impl<'a, T: ?Sized> Drop for PushLockReadGuard<'a, T> {
                 &mut *self.lock,
             )
         };
+
+        unsafe {
+            KeLeaveCriticalRegion()
+        };
     }
 }
 
@@ -165,6 +179,10 @@ impl<'a, T: ?Sized> Drop for PushLockWriteGuard<'a, T> {
             ExReleasePushLockExclusive(
                 &mut *self.lock,
             )
+        };
+
+        unsafe {
+            KeLeaveCriticalRegion()
         };
     }
 }
