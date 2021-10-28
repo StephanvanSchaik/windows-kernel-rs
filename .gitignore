@@ -1,0 +1,7 @@
+**/target/
+*.lock
+*.dll
+*.pdb
+*.lib
+*.exe
+/.vscode
