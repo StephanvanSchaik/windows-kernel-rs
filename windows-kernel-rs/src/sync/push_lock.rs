@@ -4,10 +4,8 @@ use core::ops::{Deref, DerefMut};
 use windows_kernel_sys::base::EX_PUSH_LOCK;
 use windows_kernel_sys::ntoskrnl::{
     ExInitializePushLock,
-    ExTryAcquirePushLockShared,
     ExAcquirePushLockShared,
     ExReleasePushLockShared,
-    ExTryAcquirePushLockExclusive,
     ExAcquirePushLockExclusive,
     ExReleasePushLockExclusive,
 };
@@ -67,37 +65,6 @@ impl<T> PushLock<T> {
         data.into_inner()
     }
 
-    /// Attempts to acquire this [`PushLock`] with shared read access.
-    ///
-    /// If the access could not be granted at this time, then `None` is returned. Otherwise, an
-    /// RAII guard is returned which will release the shared access when it is dropped.
-    ///
-    /// This function does not block.
-    ///
-    /// This function will yield to threads waiting to acquire the [`PushLock`] for exclusive
-    /// access, even in the event that the [`PushLock`] is currently held by one or more threads
-    /// for shared access.
-    ///
-    /// While the underlying function does allow for recursion, this atomically increments a shared
-    /// reader counter. Since dropping the RAII guard releases the lock by atomically decrementing
-    /// this shared counter, it will eventually reach zero once all RAII guards have been dropped.
-    #[inline]
-    pub fn try_read(&mut self) -> Option<PushLockReadGuard<T>> {
-        let status = unsafe {
-            ExTryAcquirePushLockShared(
-                &mut *self.lock,
-            )
-        };
-
-        match status {
-            true => Some(PushLockReadGuard {
-                lock: &mut self.lock,
-                data: unsafe { &*self.data.get() },
-            }),
-            _ => None,
-        }
-    }
-
     /// Locks this [`PushLock`] with shared read access, blocking the current thread until it can
     /// be acquired.
     ///
@@ -123,34 +90,6 @@ impl<T> PushLock<T> {
             lock: &mut self.lock,
             data: unsafe { &mut *self.data.get() },
         })
-    }
-
-    /// Attempts to lock this [`PushLock`] with exclusive write access.
-    ///
-    /// If the lock could not be acquired at this time, then `None` is returned. Otherwise, an
-    /// RAII guard is returned which will release the lock when it is dropped.
-    ///
-    /// This function does not block.
-    ///
-    /// This thread will take priority over any threads that are trying to acquire the lock for
-    /// shared access but that do not currently hold the lock for shared access.
-    ///
-    /// The underlying function does not allow for recursion, which ensures correct behavior.
-    #[inline]
-    pub fn try_write(&mut self) -> Option<PushLockWriteGuard<T>> {
-        let status = unsafe {
-            ExTryAcquirePushLockExclusive(
-                &mut *self.lock,
-            )
-        };
-
-        match status {
-            true => Some(PushLockWriteGuard {
-                lock: &mut self.lock,
-                data: unsafe { &mut *self.data.get() },
-            }),
-            _ => None,
-        }
     }
 
     /// Locks this [`PushLock`] with exclusive write access, blocking the current thread until it can

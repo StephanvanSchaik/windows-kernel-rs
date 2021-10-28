@@ -6,12 +6,6 @@ void _ExInitializeFastMutex(
 	ExInitializeFastMutex(fast_mutex);
 }
 
-BOOLEAN _ExTryAcquirePushLockExclusive(
-	PEX_PUSH_LOCK push_lock
-) {
-	return ExTryAcquirePushLockExclusive(push_lock);
-}
-
 void _ExAcquirePushLockExclusive(
 	PEX_PUSH_LOCK push_lock
 ) {
@@ -24,12 +18,6 @@ void _ExReleasePushLockExclusive(
 	ExReleasePushLockExclusive(push_lock);
 }
 
-BOOLEAN _ExTryAcquirePushLockShared(
-	PEX_PUSH_LOCK push_lock
-) {
-	return ExTryAcquirePushLockShared(push_lock);
-}
-
 void _ExAcquirePushLockShared(
 	PEX_PUSH_LOCK push_lock
 ) {
@@ -40,12 +28,6 @@ void _ExReleasePushLockShared(
 	PEX_PUSH_LOCK push_lock
 ) {
 	ExReleasePushLockShared(push_lock);
-}
-
-void _ExReleasePushLock(
-	PEX_PUSH_LOCK push_lock
-) {
-	ExReleasePushLock(push_lock);
 }
 
 PIO_STACK_LOCATION _IoGetCurrentIrpStackLocation(PIRP irp) {
