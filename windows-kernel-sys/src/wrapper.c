@@ -1,5 +1,53 @@
 #include "wrapper.h"
 
+void _ExInitializeFastMutex(
+	PFAST_MUTEX fast_mutex
+) {
+	ExInitializeFastMutex(fast_mutex);
+}
+
+BOOLEAN _ExTryAcquirePushLockExclusive(
+	PEX_PUSH_LOCK push_lock
+) {
+	return ExTryAcquirePushLockExclusive(push_lock);
+}
+
+void _ExAcquirePushLockExclusive(
+	PEX_PUSH_LOCK push_lock
+) {
+	ExAcquirePushLockExclusive(push_lock);
+}
+
+void _ExReleasePushLockExclusive(
+	PEX_PUSH_LOCK push_lock
+) {
+	ExReleasePushLockExclusive(push_lock);
+}
+
+BOOLEAN _ExTryAcquirePushLockShared(
+	PEX_PUSH_LOCK push_lock
+) {
+	return ExTryAcquirePushLockShared(push_lock);
+}
+
+void _ExAcquirePushLockShared(
+	PEX_PUSH_LOCK push_lock
+) {
+	ExAcquirePushLockShared(push_lock);
+}
+
+void _ExReleasePushLockShared(
+	PEX_PUSH_LOCK push_lock
+) {
+	ExReleasePushLockShared(push_lock);
+}
+
+void _ExReleasePushLock(
+	PEX_PUSH_LOCK push_lock
+) {
+	ExReleasePushLock(push_lock);
+}
+
 PIO_STACK_LOCATION _IoGetCurrentIrpStackLocation(PIRP irp) {
 	return IoGetCurrentIrpStackLocation(irp);
 }

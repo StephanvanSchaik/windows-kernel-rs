@@ -3,7 +3,9 @@
 #include "ntdef.h"
 #include "ntstatus.h"
 
-//struct _DRIVE_LAYOUT_INFORMATION_EX;
+typedef ULONG_PTR _EX_PUSH_LOCK;
+typedef ULONG_PTR EX_PUSH_LOCK;
+typedef ULONG_PTR *PEX_PUSH_LOCK;
 
 typedef union _KGDTENTRY64
 {
