@@ -113,7 +113,7 @@ impl<T> From<T> for FastMutex<T> {
 /// An RAII implementation of a "scoped lock" of a mutex. When this structure is dropped (falls out
 /// of scope), the lock will be unlocked.
 ///
-/// The data protected by the mutex can bea ccessed through this guard via its [`Deref`] and
+/// The data protected by the mutex can be accessed through this guard via its [`Deref`] and
 /// [`DerefMut`] implementations.
 ///
 /// This structure is created by the [`lock`] and [`try_lock`] methods on [`FastMutex`].
