@@ -1,6 +1,20 @@
 use std::path::PathBuf;
 use windows_kernel_build::DirectoryType;
 
+use bindgen::callbacks::*;
+
+#[derive(Debug)]
+struct Callbacks;
+
+impl ParseCallbacks for Callbacks {
+    fn int_macro(&self, name: &str, _value: i64) -> Option<IntKind> {
+        Some(match name {
+            "TRUE" | "FALSE" => IntKind::UChar,
+            _ => return None,
+        })
+    }
+}
+
 fn generate_base() {
     println!("cargo:rerun-if-changed=src/wrapper.h");
 
@@ -19,6 +33,7 @@ fn generate_base() {
         .default_enum_style(bindgen::EnumVariation::ModuleConsts)
         .clang_arg(format!("-I{}", include_dir.to_str().unwrap()))
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(Callbacks))
         .ignore_functions()
         .generate()
         .unwrap()
