@@ -1,11 +1,12 @@
-use bitflags::bitflags;
 use crate::device::DeviceType;
+use bitflags::bitflags;
 use windows_kernel_sys::base::{
-    FILE_ANY_ACCESS, FILE_READ_DATA, FILE_WRITE_DATA,
-    METHOD_NEITHER, METHOD_IN_DIRECT, METHOD_OUT_DIRECT, METHOD_BUFFERED
+    FILE_ANY_ACCESS, FILE_READ_DATA, FILE_WRITE_DATA, METHOD_BUFFERED, METHOD_IN_DIRECT,
+    METHOD_NEITHER, METHOD_OUT_DIRECT,
 };
 
 bitflags! {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct RequiredAccess: u32 {
         const ANY_ACCESS = FILE_ANY_ACCESS;
         const READ_DATA = FILE_READ_DATA;
@@ -47,23 +48,28 @@ impl Into<u32> for TransferMethod {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ControlCode(pub DeviceType, pub RequiredAccess, pub u32, pub TransferMethod);
+pub struct ControlCode(
+    pub DeviceType,
+    pub RequiredAccess,
+    pub u32,
+    pub TransferMethod,
+);
 
 impl ControlCode {
     const METHOD_BITS: usize = 2;
-    const NUM_BITS:    usize = 12;
+    const NUM_BITS: usize = 12;
     const ACCESS_BITS: usize = 2;
-    const TYPE_BITS:   usize = 16;
+    const TYPE_BITS: usize = 16;
 
     const METHOD_SHIFT: usize = 0;
-    const NUM_SHIFT:    usize = Self::METHOD_SHIFT + Self::METHOD_BITS;
+    const NUM_SHIFT: usize = Self::METHOD_SHIFT + Self::METHOD_BITS;
     const ACCESS_SHIFT: usize = Self::NUM_SHIFT + Self::NUM_BITS;
-    const TYPE_SHIFT:   usize = Self::ACCESS_SHIFT + Self::ACCESS_BITS;
+    const TYPE_SHIFT: usize = Self::ACCESS_SHIFT + Self::ACCESS_BITS;
 
     const METHOD_MASK: u32 = (1 << Self::METHOD_BITS) - 1;
-    const NUM_MASK:    u32 = (1 << Self::NUM_BITS) - 1;
+    const NUM_MASK: u32 = (1 << Self::NUM_BITS) - 1;
     const ACCESS_MASK: u32 = (1 << Self::ACCESS_BITS) - 1;
-    const TYPE_MASK:   u32 = (1 << Self::TYPE_BITS) - 1;
+    const TYPE_MASK: u32 = (1 << Self::TYPE_BITS) - 1;
 
     pub fn device_type(&self) -> DeviceType {
         self.0
@@ -85,15 +91,15 @@ impl ControlCode {
 impl From<u32> for ControlCode {
     fn from(value: u32) -> Self {
         let method = (value >> Self::METHOD_SHIFT) & Self::METHOD_MASK;
-        let num    = (value >> Self::NUM_SHIFT)    & Self::NUM_MASK;
+        let num = (value >> Self::NUM_SHIFT) & Self::NUM_MASK;
         let access = (value >> Self::ACCESS_SHIFT) & Self::ACCESS_MASK;
-        let ty     = (value >> Self::TYPE_SHIFT)   & Self::TYPE_MASK;
+        let ty = (value >> Self::TYPE_SHIFT) & Self::TYPE_MASK;
 
         Self(
             ty.into(),
             RequiredAccess::from_bits(access).unwrap_or(RequiredAccess::READ_DATA),
             num,
-            method.into()
+            method.into(),
         )
     }
 }
@@ -101,9 +107,9 @@ impl From<u32> for ControlCode {
 impl Into<u32> for ControlCode {
     fn into(self) -> u32 {
         let method = Into::<u32>::into(self.3) << Self::METHOD_SHIFT;
-        let num    = self.2 << Self::NUM_SHIFT;
+        let num = self.2 << Self::NUM_SHIFT;
         let access = self.1.bits() << Self::ACCESS_SHIFT;
-        let ty     = Into::<u32>::into(self.0) << Self::TYPE_SHIFT;
+        let ty = Into::<u32>::into(self.0) << Self::TYPE_SHIFT;
 
         ty | access | num | method
     }

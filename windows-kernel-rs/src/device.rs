@@ -1,10 +1,12 @@
+use crate::error::Error;
+use crate::request::{IoControlRequest, IoRequest, ReadRequest, WriteRequest};
 use alloc::boxed::Box;
 use bitflags::bitflags;
-use crate::error::Error;
-use crate::request::{IoRequest, IoControlRequest, ReadRequest, WriteRequest};
-use windows_kernel_sys::base::{DEVICE_OBJECT, IRP, NTSTATUS};
 use windows_kernel_sys::base::STATUS_SUCCESS;
-use windows_kernel_sys::base::{IRP_MJ_CREATE, IRP_MJ_CLOSE, IRP_MJ_CLEANUP, IRP_MJ_READ, IRP_MJ_WRITE, IRP_MJ_DEVICE_CONTROL};
+use windows_kernel_sys::base::{DEVICE_OBJECT, IRP, NTSTATUS};
+use windows_kernel_sys::base::{
+    IRP_MJ_CLEANUP, IRP_MJ_CLOSE, IRP_MJ_CREATE, IRP_MJ_DEVICE_CONTROL, IRP_MJ_READ, IRP_MJ_WRITE,
+};
 use windows_kernel_sys::ntoskrnl::{IoDeleteDevice, IoGetCurrentIrpStackLocation};
 
 #[derive(Copy, Clone, Debug)]
@@ -129,12 +131,18 @@ impl Into<u32> for DeviceType {
             DeviceType::MidiOut => windows_kernel_sys::base::FILE_DEVICE_MIDI_OUT,
             DeviceType::Modem => windows_kernel_sys::base::FILE_DEVICE_MODEM,
             DeviceType::Mouse => windows_kernel_sys::base::FILE_DEVICE_MOUSE,
-            DeviceType::MultiUncProvider => windows_kernel_sys::base::FILE_DEVICE_MULTI_UNC_PROVIDER,
+            DeviceType::MultiUncProvider => {
+                windows_kernel_sys::base::FILE_DEVICE_MULTI_UNC_PROVIDER
+            }
             DeviceType::NamedPipe => windows_kernel_sys::base::FILE_DEVICE_NAMED_PIPE,
             DeviceType::Network => windows_kernel_sys::base::FILE_DEVICE_NETWORK,
             DeviceType::NetworkBrowser => windows_kernel_sys::base::FILE_DEVICE_NETWORK_BROWSER,
-            DeviceType::NetworkFileSystem => windows_kernel_sys::base::FILE_DEVICE_NETWORK_FILE_SYSTEM,
-            DeviceType::NetworkRedirector => windows_kernel_sys::base::FILE_DEVICE_NETWORK_REDIRECTOR,
+            DeviceType::NetworkFileSystem => {
+                windows_kernel_sys::base::FILE_DEVICE_NETWORK_FILE_SYSTEM
+            }
+            DeviceType::NetworkRedirector => {
+                windows_kernel_sys::base::FILE_DEVICE_NETWORK_REDIRECTOR
+            }
             DeviceType::Null => windows_kernel_sys::base::FILE_DEVICE_NULL,
             DeviceType::ParallelPort => windows_kernel_sys::base::FILE_DEVICE_PARALLEL_PORT,
             DeviceType::PhysicalNetcard => windows_kernel_sys::base::FILE_DEVICE_PHYSICAL_NETCARD,
@@ -194,12 +202,18 @@ impl From<u32> for DeviceType {
             windows_kernel_sys::base::FILE_DEVICE_MIDI_OUT => DeviceType::MidiOut,
             windows_kernel_sys::base::FILE_DEVICE_MODEM => DeviceType::Modem,
             windows_kernel_sys::base::FILE_DEVICE_MOUSE => DeviceType::Mouse,
-            windows_kernel_sys::base::FILE_DEVICE_MULTI_UNC_PROVIDER => DeviceType::MultiUncProvider,
+            windows_kernel_sys::base::FILE_DEVICE_MULTI_UNC_PROVIDER => {
+                DeviceType::MultiUncProvider
+            }
             windows_kernel_sys::base::FILE_DEVICE_NAMED_PIPE => DeviceType::NamedPipe,
             windows_kernel_sys::base::FILE_DEVICE_NETWORK => DeviceType::Network,
             windows_kernel_sys::base::FILE_DEVICE_NETWORK_BROWSER => DeviceType::NetworkBrowser,
-            windows_kernel_sys::base::FILE_DEVICE_NETWORK_FILE_SYSTEM => DeviceType::NetworkFileSystem,
-            windows_kernel_sys::base::FILE_DEVICE_NETWORK_REDIRECTOR => DeviceType::NetworkRedirector,
+            windows_kernel_sys::base::FILE_DEVICE_NETWORK_FILE_SYSTEM => {
+                DeviceType::NetworkFileSystem
+            }
+            windows_kernel_sys::base::FILE_DEVICE_NETWORK_REDIRECTOR => {
+                DeviceType::NetworkRedirector
+            }
             windows_kernel_sys::base::FILE_DEVICE_NULL => DeviceType::Null,
             windows_kernel_sys::base::FILE_DEVICE_PARALLEL_PORT => DeviceType::ParallelPort,
             windows_kernel_sys::base::FILE_DEVICE_PHYSICAL_NETCARD => DeviceType::PhysicalNetcard,
@@ -230,8 +244,8 @@ impl From<u32> for DeviceType {
 
 #[repr(C)]
 pub struct device_operations {
-    dispatch: Option<extern "C" fn (*mut DEVICE_OBJECT, *mut IRP, u8) -> NTSTATUS>,
-    release: Option<extern "C" fn (*mut DEVICE_OBJECT)>,
+    dispatch: Option<extern "C" fn(*mut DEVICE_OBJECT, *mut IRP, u8) -> NTSTATUS>,
+    release: Option<extern "C" fn(*mut DEVICE_OBJECT)>,
 }
 
 pub struct Device {
@@ -243,9 +257,7 @@ unsafe impl Sync for Device {}
 
 impl Device {
     pub unsafe fn from_raw(raw: *mut DEVICE_OBJECT) -> Self {
-        Self {
-            raw,
-        }
+        Self { raw }
     }
 
     pub unsafe fn as_raw(&self) -> *const DEVICE_OBJECT {
@@ -261,15 +273,11 @@ impl Device {
     }
 
     pub(crate) fn extension(&self) -> &DeviceExtension {
-        unsafe {
-            &*((*self.raw).DeviceExtension as *const DeviceExtension)
-        }
+        unsafe { &*((*self.raw).DeviceExtension as *const DeviceExtension) }
     }
 
     pub(crate) fn extension_mut(&self) -> &mut DeviceExtension {
-        unsafe {
-            &mut *((*self.raw).DeviceExtension as *mut DeviceExtension)
-        }
+        unsafe { &mut *((*self.raw).DeviceExtension as *mut DeviceExtension) }
     }
 
     pub(crate) fn device_type(&self) -> DeviceType {
@@ -277,21 +285,15 @@ impl Device {
     }
 
     pub(crate) fn vtable(&self) -> &device_operations {
-        unsafe {
-            &*(self.extension().vtable as *const _)
-        }
+        unsafe { &*(self.extension().vtable as *const _) }
     }
 
     pub fn data<T: DeviceOperations>(&self) -> &T {
-        unsafe {
-            &*(self.extension().data as *const T)
-        }
+        unsafe { &*(self.extension().data as *const T) }
     }
 
     pub fn data_mut<T: DeviceOperations>(&self) -> &mut T {
-        unsafe {
-            &mut *(self.extension().data as *mut T)
-        }
+        unsafe { &mut *(self.extension().data as *mut T) }
     }
 }
 
@@ -301,7 +303,7 @@ impl Drop for Device {
             return;
         }
 
-        unsafe {    
+        unsafe {
             if let Some(release) = self.vtable().release {
                 release(self.raw);
             }
@@ -326,7 +328,11 @@ pub trait DeviceOperations: Sync + Sized {
         Ok(Completion::Complete(0, request))
     }
 
-    fn cleanup(&mut self, _device: &Device, request: IoRequest) -> Result<Completion, RequestError> {
+    fn cleanup(
+        &mut self,
+        _device: &Device,
+        request: IoRequest,
+    ) -> Result<Completion, RequestError> {
         Ok(Completion::Complete(0, request))
     }
 
@@ -334,11 +340,19 @@ pub trait DeviceOperations: Sync + Sized {
         Ok(Completion::Complete(0, request.into()))
     }
 
-    fn write(&mut self, _device: &Device, request: WriteRequest) -> Result<Completion, RequestError> {
+    fn write(
+        &mut self,
+        _device: &Device,
+        request: WriteRequest,
+    ) -> Result<Completion, RequestError> {
         Ok(Completion::Complete(0, request.into()))
     }
 
-    fn ioctl(&mut self, _device: &Device, request: IoControlRequest) -> Result<Completion, RequestError> {
+    fn ioctl(
+        &mut self,
+        _device: &Device,
+        request: IoControlRequest,
+    ) -> Result<Completion, RequestError> {
         Ok(Completion::Complete(0, request.into()))
     }
 }
@@ -357,33 +371,28 @@ extern "C" fn dispatch_callback<T: DeviceOperations>(
         IRP_MJ_CLOSE => data.close(&device, request),
         IRP_MJ_CLEANUP => data.cleanup(&device, request),
         IRP_MJ_READ => {
-            let read_request = ReadRequest {
-                inner: request,
-            };
+            let read_request = ReadRequest { inner: request };
 
             data.read(&device, read_request)
         }
         IRP_MJ_WRITE => {
-            let write_request = WriteRequest {
-                inner: request,
-            };
+            let write_request = WriteRequest { inner: request };
 
             data.write(&device, write_request)
         }
         IRP_MJ_DEVICE_CONTROL => {
-            let control_request = IoControlRequest {
-                inner: request,
-            };
+            let control_request = IoControlRequest { inner: request };
 
             if device.device_type() == control_request.control_code().device_type() {
                 data.ioctl(&device, control_request)
             } else {
-                Err(RequestError(Error::INVALID_PARAMETER, control_request.into()))
+                Err(RequestError(
+                    Error::INVALID_PARAMETER,
+                    control_request.into(),
+                ))
             }
         }
-        _ => {
-            Err(RequestError(Error::INVALID_PARAMETER, request))
-        }
+        _ => Err(RequestError(Error::INVALID_PARAMETER, request)),
     };
 
     device.into_raw();
@@ -401,14 +410,12 @@ extern "C" fn dispatch_callback<T: DeviceOperations>(
     }
 }
 
-extern fn release_callback<T: DeviceOperations>(
-    device: *mut DEVICE_OBJECT,
-) {
+extern "C" fn release_callback<T: DeviceOperations>(device: *mut DEVICE_OBJECT) {
     unsafe {
         let extension = (*device).DeviceExtension as *mut DeviceExtension;
 
         let ptr = core::mem::replace(&mut (*extension).data, core::ptr::null_mut());
-        Box::from_raw(ptr as *mut T);
+        let _ = Box::from_raw(ptr as *mut T);
     }
 }
 
@@ -428,10 +435,7 @@ pub struct DeviceExtension {
     pub(crate) device_type: DeviceType,
 }
 
-pub extern "C" fn dispatch_device(
-    device: *mut DEVICE_OBJECT,
-    irp: *mut IRP,
-) -> NTSTATUS {
+pub extern "C" fn dispatch_device(device: *mut DEVICE_OBJECT, irp: *mut IRP) -> NTSTATUS {
     let stack_location = unsafe { &*IoGetCurrentIrpStackLocation(irp) };
     let device = unsafe { Device::from_raw(device) };
     let vtable = device.vtable();
