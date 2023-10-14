@@ -1,9 +1,7 @@
 [package]
 name = "windows-kernel-rs"
 version = "0.1.0"
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+edition = "2021"
 
 [profile.dev]
 panic = "abort"
@@ -17,8 +15,8 @@ alloc = []
 system = []
 
 [dependencies]
-bitflags = "1.3"
+bitflags = "2.4.0"
 cty = "0.2"
 lazy_static = { version = "1.4", features = ["spin_no_std"] }
-widestring = { version = "0.4", default-features = false, features = ["alloc"]}
+widestring = { version = "1", default-features = false, features = ["alloc"] }
 windows-kernel-sys = { path = "../windows-kernel-sys" }
